@@ -70,3 +70,37 @@ Activity/Search. The desk's adapter cluster should read as one
 button the way their avatar-button-opens-panel does, and Board
 zones should reuse the Activity/Approvals/Identity/Mail tab
 vocabulary where the concepts match.
+
+S1 probes (answered in the room): the in-panel Activity tab IS the
+element calibration recorded (same placement, pressed while open);
+closing the panel removes the tabs — no standalone unpressed toggle
+exists in side-chat view. Rail is icon-only (one svg per item, no
+text); hover shows a custom label+shortcut tooltip ("Chat", "⌘J"),
+not `title` attrs. Search opens an overlay "Search Muse" dialog
+(combobox + Suggestions listbox, Esc closes). Get the Muse app
+opens a "Download apps" dialog (iOS/Android/Mac tabs, QR code,
+Close). Settings menu: "Keyboard shortcuts ⌘/", "Download apps",
+"Report an issue", "Settings ⌘,". Deliberately unobserved (bounds):
+main-chat top bar, Create-a-space landing, Chat-link expanded
+semantics beyond panel tracking.
+
+## S2 — Conversation switching
+
+The switcher is a persistent left "Side chats" navigator: Search
+box, "Side chat options" menu ("Keep chat panel visible" checked,
+"Show archived chats"), "Main chat" button, expandable "Side chats"
+header, "New side chat" first, then one button per thread. Rows are
+title-only buttons except the ACTIVE row, which adds relative age
+("just now", "3h") and a "More thread actions" menu. The Search box
+searches message content across chats: thread hits (title, age,
+"Side chat" badge) and ellipsis-prefixed message-snippet hits.
+Switching swaps the center column to `/thread/<id>`; rail,
+navigator, and status panel persist. Selector survival verified
+across a room→test-chat→room switch (scroll, log+children, 10
+message items, composer, name leaf, Activity button/tab, panel all
+present in both threads).
+
+Desk implication: map S2 adapt stands — records stay ours; mirror
+recency-first order and the search box in the table defaults; check
+Open/Pin/Archive against "More thread actions" when S11/S12 map
+the menus.
