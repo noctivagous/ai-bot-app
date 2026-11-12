@@ -7,6 +7,7 @@ import { ScheduleView } from './components/ScheduleView';
 import { ArtifactsView, ArtifactViewer } from './components/ArtifactsView';
 import { ChatPanel } from './components/ChatPanel';
 import { adapterStore, useAdapter } from './app/useAdapter';
+import { AmendBook } from './app/amends';
 import { loadCollection, records } from './app/records';
 import {
   SEED_ARTIFACTS,
@@ -98,6 +99,9 @@ export default function App() {
   eventsRef.current = events;
   const proposalsRef = useRef(proposals);
   proposalsRef.current = proposals;
+  // D4 follow-up: amends that arrive before their final wait here
+  // (bounded); see src/app/amends.ts for the application rules.
+  const amendBookRef = useRef(new AmendBook());
   const chatOpenRef = useRef<string | null>(null);
   chatOpenRef.current = chatOpenId;
 
@@ -146,13 +150,15 @@ export default function App() {
   );
 
   const appendMessage = useCallback((convId: string, msg: ChatMsg) => {
+    // A buffered amend (D4 follow-up) stamps the message as it lands.
+    const stamped = amendBookRef.current.stampIncoming(convId, msg);
     setMessages((prev) => {
       const existing = prev[convId] ?? [];
       // Dedupe by message id (§11 slice 5): a final re-delivered after an
       // app reload or bridge reconnect must not duplicate the message.
       // Adapters dedupe too; this is the store-level guarantee.
-      if (existing.some((m) => m.id === msg.id)) return prev;
-      return { ...prev, [convId]: [...existing, msg] };
+      if (existing.some((m) => m.id === stamped.id)) return prev;
+      return { ...prev, [convId]: [...existing, stamped] };
     });
   }, []);
 
@@ -232,6 +238,17 @@ export default function App() {
               const next = { ...prev };
               delete next[convId];
               return next;
+            });
+          }
+          break;
+        case 'message.bot.amend':
+          // D4 follow-up: stamp the delivered message, or buffer the
+          // amend for a final still in flight (AmendBook's rules).
+          if (convId) {
+            setMessages((prev) => {
+              const next = amendBookRef.current.applyToList(prev[convId], convId, e.msgId, e.patch);
+              if (!next || next === prev[convId]) return prev;
+              return { ...prev, [convId]: next };
             });
           }
           break;

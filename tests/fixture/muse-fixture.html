@@ -60,6 +60,7 @@
       <div data-testid="signed-in-marker">Signed in as <b data-testid="agent-name">Kavi</b></div>
       <span class="spacer"></span>
       <button data-testid="trigger-approval" title="Fixture test control">Trigger approval</button>
+      <button data-testid="trigger-stale-interrupt" title="Fixture test control">Stale interrupt</button>
       <button data-testid="activity-button" aria-label="Activity" aria-expanded="false">Activity</button>
     </header>
     <section data-testid="activity-panel" hidden>
@@ -79,6 +80,7 @@
     </main>`;
 
   const list = app.querySelector('[data-testid="message-list"]');
+  const composerRow = app.querySelector('.composer-row');
   const composer = app.querySelector('[data-testid="composer"]');
   const sendBtn = app.querySelector('[data-testid="send-button"]');
   const working = app.querySelector('[data-testid="working-indicator"]');
@@ -271,6 +273,23 @@
   }
   app.querySelector('[data-testid="trigger-approval"]').addEventListener('click', showApproval);
 
+  // D4 control case: an Activity entry that concludes "Interrupted"
+  // with NO chat reply streaming anywhere near it (a background task
+  // the owner stopped elsewhere). The content script's correlation
+  // must stay silent for it — no message may be stamped.
+  let staleCounter = 0;
+  app.querySelector('[data-testid="trigger-stale-interrupt"]').addEventListener('click', () => {
+    const a = addActivity({
+      id: `act-stale-${++staleCounter}`, title: 'Background tidy-up', state: 'active', elapsedSec: 0,
+      detail: 'Tidying in the background — no chat reply is involved.',
+    });
+    setTimeout(() => {
+      a.state = 'done';
+      a.outcome = 'Interrupted';
+      renderActivity(a);
+    }, 900);
+  });
+
   // ---- send + streaming bot ----
 
   let turnCounter = 0;
@@ -291,6 +310,61 @@
     return `Fixture reply — I received “${userText}”. This reply streams from the fixture page, token by token, like the real client.`;
   }
 
+  // ---- D4: interruptible turns ----
+  // A "please stop this reply late|early" send streams a long reply
+  // slowly while a Stop button replaces Send in the composer (survey
+  // S5: on the real page, Send becomes Stop mid-reply). Clicking Stop
+  // stands the partial text; the turn's Activity entry then concludes
+  // with outcome "Interrupted" — 'early' at once, BEFORE the stream's
+  // settle final (the amend must be buffered app-side and stamped when
+  // the final lands), or 'late' 1.4s after the click, AFTER the final
+  // (the amend must patch the already-delivered message).
+
+  const INTERRUPT_REPLY =
+    'This reply was meant to run long: it walks the whole transcript batch turn by turn, ' +
+    'checks every grounded claim against the graph testimony, flags the sense-selection ' +
+    'misses for the engine notes, and only then composes the summary — appendices and ' +
+    'all, down to the last briefing note.';
+
+  function runInterruptibleTurn(botEl, turnActivity, mode) {
+    if (sendBtn) sendBtn.hidden = true;
+    const stopBtn = document.createElement('button');
+    stopBtn.className = 'primary';
+    stopBtn.dataset.testid = 'stop-button';
+    stopBtn.textContent = 'Stop';
+    composerRow.appendChild(stopBtn);
+    let i = 0;
+    const step = Math.max(2, Math.round(INTERRUPT_REPLY.length / 55));
+    const timer = setInterval(() => {
+      i = Math.min(INTERRUPT_REPLY.length, i + step);
+      botEl.textContent = INTERRUPT_REPLY.slice(0, i);
+      botEl.dataset.ts = new Date().toISOString();
+      if (i >= INTERRUPT_REPLY.length) finishNaturally();
+    }, 110);
+    function cleanup() {
+      clearInterval(timer);
+      working.hidden = true;
+      stopBtn.remove();
+      if (sendBtn) sendBtn.hidden = false;
+    }
+    function finishNaturally() {
+      cleanup();
+      turnActivity.state = 'done';
+      turnActivity.outcome = 'Reply sent.';
+      renderActivity(turnActivity);
+    }
+    stopBtn.addEventListener('click', () => {
+      cleanup();
+      const conclude = () => {
+        turnActivity.state = 'done';
+        turnActivity.outcome = 'Interrupted';
+        renderActivity(turnActivity);
+      };
+      if (mode === 'early') conclude();
+      else setTimeout(conclude, 1400);
+    });
+  }
+
   function sendCurrent() {
     const text = composerState.value.trim();
     if (!text) return; // state-driven: a DOM-only value never reaches here
@@ -304,6 +378,11 @@
       id: `act-turn-${turn}`, title: 'Replying in this chat', state: 'active', elapsedSec: 0,
       detail: 'Streaming a reply in the open conversation.',
     });
+    const stopMatch = /stop this reply (late|early)/i.exec(text);
+    if (stopMatch) {
+      runInterruptibleTurn(botEl, turnActivity, stopMatch[1].toLowerCase());
+      return;
+    }
     let i = 0;
     const step = Math.max(4, Math.round(reply.length / 18));
     const timer = setInterval(() => {

@@ -110,11 +110,26 @@ Desk-internal; unchanged from v0.1 except where noted.
   the conversation record) — the desk keeps records, and a record that
   hides a truncation misleads; record it as a deliberate difference.*
   **DECIDED: mark ours. Built in the first tranche: flag on the message
-  model, mock script + ChatPanel marker end-to-end. The real adapter's
-  correlation of an Activity "Interrupted" outcome to a final is a
-  recorded follow-up (see the comment at the `message.bot.final` case
-  in MuseAiAdapter) — the wire frames share no identity and no
-  ordering guarantee, so no heuristic was wired.**
+  model, mock script + ChatPanel marker end-to-end. Follow-up slice
+  (branch `feat/d4-interrupted-wiring`): the real adapter is now wired
+  end-to-end via an amend event. The content script — the only
+  component that sees both the streaming message and the Activity
+  entry in-page — tracks each bot message's streaming window (first
+  observed growth → settle final) and each entry's active window, and
+  when an entry concludes with outcome "Interrupted" it emits a
+  `message.bot.amend` for the message id ONLY when exactly one
+  streaming window overlaps the entry's window; zero or multiple
+  candidates emit nothing (fail-open by construction — a missed stamp
+  matches the client, a wrong stamp is the only unacceptable outcome).
+  The adapter translates the frame; the store stamps the delivered
+  final, or buffers the amend (bounded) when it beats the final.
+  Proven on the fixture by `scripts/probe-interrupted.mjs` (15/15,
+  real MV3 extension: late amend patches a delivered final, early
+  amend stamps at final, normal reply unmarked, no-overlap
+  "Interrupted" stamps nothing). Exactly that much is proven: the
+  survey witnessed the Stop behaviour on the real page, but the
+  extension's correlation itself has not yet run against a genuine
+  Stop on the real page — the fixture is its proof.**
 
 ## Open items
 

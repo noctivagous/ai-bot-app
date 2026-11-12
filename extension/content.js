@@ -467,6 +467,7 @@
       const prev = streamed.get(mid) ?? '';
       if (text.length > prev.length && text.startsWith(prev)) {
         streamed.set(mid, text);
+        noteStreamGrowth(mid); // D4: open this message's streaming window
         routeEvent({
           kind: 'message.bot.delta',
           botId: BOT_ID,
@@ -496,12 +497,101 @@
     for (const [mid, text] of streamed) {
       if (finalised.has(mid) || !text) continue;
       finalised.add(mid);
+      noteFinalised(mid); // D4: close this message's streaming window
       routeEvent({
         kind: 'message.bot.final',
         botId: BOT_ID,
         msg: { id: mid, role: 'bot', text, ts: nowIso() },
       });
     }
+  }
+
+  // ---------- D4 follow-up: interrupted correlation ----------
+  // FEATURE-MAP D4: when the owner stops a reply, the client stands
+  // the partial unmarked; the Activity entry for that reply concludes
+  // with outcome "Interrupted" (survey S5/S6). The desk marks its
+  // record — but panel entries carry no id linking them to a message
+  // (S6), so the link is made HERE, the only place both sides are
+  // observable, by TIME WINDOWS, and conservatively:
+  //
+  //   - a message window opens at the message's first OBSERVED growth
+  //     (a delta emitted by streamFromMutations) and closes when its
+  //     settle final is emitted (trySettle);
+  //   - an entry window opens when the entry is first observed in the
+  //     non-terminal 'active' state and closes at the first pass that
+  //     observes it terminal with outcome exactly "Interrupted";
+  //   - the amend is emitted ONLY when exactly one message window
+  //     overlaps the entry window. Zero candidates (nothing streamed
+  //     inside it) or two or more (ambiguous) → nothing is emitted.
+  //
+  // The failure direction is fail-open throughout: anything unobserved
+  // — an entry already terminal when first seen, a reply whose growth
+  // was never observed (e.g. a history paint), two replies streaming
+  // inside one entry's window — yields NO stamp rather than a guessed
+  // one. A wrong stamp is the only unacceptable outcome; a missed
+  // stamp merely matches the client. Windows are retained for
+  // WINDOW_KEEP_MS after closing so a verdict that lands shortly
+  // after the final still correlates, then pruned.
+
+  const WINDOW_KEEP_MS = 120_000;
+  const msgWindows = new Map(); // msgId -> { start, end|null }
+  const entryWindows = new Map(); // activityId -> { start|null, processed, processedAt }
+
+  function pruneWindows() {
+    const cutoff = Date.now() - WINDOW_KEEP_MS;
+    for (const [mid, w] of msgWindows) {
+      if (w.end !== null && w.end < cutoff) msgWindows.delete(mid);
+    }
+    for (const [aid, w] of entryWindows) {
+      if (w.processed && w.processedAt < cutoff) entryWindows.delete(aid);
+    }
+  }
+
+  function noteStreamGrowth(mid) {
+    if (!msgWindows.has(mid)) msgWindows.set(mid, { start: Date.now(), end: null });
+  }
+
+  function noteFinalised(mid) {
+    const w = msgWindows.get(mid);
+    if (w && w.end === null) w.end = Date.now();
+    pruneWindows();
+  }
+
+  function correlateInterrupted(entryWin) {
+    const candidates = [];
+    for (const [mid, w] of msgWindows) {
+      // A still-open message window counts as running until the
+      // entry's end (the verdict can precede the settle final).
+      const wEnd = w.end ?? entryWin.end;
+      if (w.start <= entryWin.end && wEnd >= entryWin.start) candidates.push(mid);
+    }
+    if (candidates.length !== 1) return; // zero or ambiguous — fail open
+    routeEvent({
+      kind: 'message.bot.amend',
+      botId: BOT_ID,
+      msgId: candidates[0],
+      patch: { interrupted: true },
+    });
+  }
+
+  function trackEntryConclusion(activityId, state, outcomeText) {
+    let rec = entryWindows.get(activityId);
+    if (!rec) {
+      rec = { start: null, processed: false, processedAt: 0 };
+      entryWindows.set(activityId, rec);
+    }
+    if (state === 'active') {
+      if (rec.start === null && !rec.processed) rec.start = Date.now();
+      return;
+    }
+    // Terminal state: the conclusion is judged exactly once.
+    if (rec.processed) return;
+    rec.processed = true;
+    rec.processedAt = Date.now();
+    pruneWindows();
+    if (rec.start === null) return; // never observed running — no window to correlate
+    if (!outcomeText || outcomeText.trim().toLowerCase() !== 'interrupted') return;
+    correlateInterrupted({ start: rec.start, end: rec.processedAt });
   }
 
   // ---------- slice 6: approvals ----------
@@ -590,15 +680,20 @@
       const titleEl = el.querySelector('.a-title');
       const detailEl = firstIn(el, S.activityDetail);
       const outcomeEl = firstIn(el, S.activityOutcome);
+      const outcomeText =
+        outcomeEl && !outcomeEl.hidden && outcomeEl.textContent.trim()
+          ? outcomeEl.textContent.trim()
+          : null;
+      // D4: watch this entry's lifecycle for an "Interrupted"
+      // conclusion to correlate against streaming windows.
+      trackEntryConclusion(activityId, state, outcomeText);
       patches.push({
         activityId,
         title: (titleEl?.textContent ?? activityId).trim(),
         state,
         activity: (detailEl?.textContent ?? '').trim().split('\n')[0] ?? '',
         detail: (detailEl?.textContent ?? '').trim(),
-        ...(outcomeEl && !outcomeEl.hidden && outcomeEl.textContent.trim()
-          ? { outcome: outcomeEl.textContent.trim() }
-          : {}),
+        ...(outcomeText ? { outcome: outcomeText } : {}),
         conversationId: el.getAttribute('data-conversation-ref') || currentConversationId(),
       });
     }

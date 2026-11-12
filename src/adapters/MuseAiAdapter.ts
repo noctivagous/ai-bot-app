@@ -376,22 +376,19 @@ export class MuseAiAdapter implements BotServiceAdapter {
         if (!msg?.id || this.finalisedIds.has(msg.id)) break; // dedupe
         this.finalisedIds.add(msg.id);
         this.streamBuffers.delete(msg.id);
-        // D4 FOLLOW-UP (FEATURE-MAP S5/D4, decided 2026-11-12): the desk
-        // marks interrupted partials (ChatMsg.interrupted), but the
-        // correlation is deliberately NOT wired here yet. The client's
-        // "Interrupted" verdict lives on the Activity panel entry, which
-        // reaches this adapter as an independent `activity` frame: panel
-        // entries carry no id linking them to a message (survey S6),
-        // routing here is by conversation only (so an unrelated
-        // interrupted activity in the same conversation would be a
-        // false positive), and there is no ordering guarantee against
-        // this settle-driven final — with the app deduping finals by
-        // message id, a late-arriving outcome could not amend a final
-        // already delivered. A correct wiring needs the content script
-        // to link the outcome to the message (or an amend event kind);
-        // until then, no heuristic. If the wire msg ever arrives with
-        // `interrupted` already stamped, the spread below passes it
-        // through unchanged.
+        // D4 (FEATURE-MAP S5/D4, decided 2026-11-12): the desk marks
+        // interrupted partials (ChatMsg.interrupted). The verdict is
+        // NOT derived here: the client's "Interrupted" outcome lives on
+        // an Activity panel entry that carries no id linking it to a
+        // message (survey S6), so correlation happens in the content
+        // script — the only component that sees both the streaming
+        // message and the entry in-page — and reaches this adapter as a
+        // separate `message.bot.amend` event (case below) naming the
+        // message id. Finals stay exactly-once and deduped as here; the
+        // store applies the amend to the delivered final, or buffers it
+        // when it beats this settle-driven final (src/app/amends.ts).
+        // If the wire msg ever arrives with `interrupted` already
+        // stamped, the spread below passes it through unchanged.
         // Parse intents out of the completed text: the final carries
         // the CLEAN text; intents become their own events (§10).
         const parsed = parseIntents(msg.text ?? '');
@@ -402,6 +399,20 @@ export class MuseAiAdapter implements BotServiceAdapter {
         for (const wv of parsed.webview) {
           this.emitEvent(route({ kind: 'intent.webview', botId: BOT.id, url: wv.ref, title: wv.title }));
         }
+        break;
+      }
+      case 'message.bot.amend': {
+        // D4 follow-up: the content script's in-page correlation of an
+        // Activity "Interrupted" conclusion to a streamed message (see
+        // extension/content.js). Only the true stamp is meaningful on
+        // this wire — a malformed or false patch is ignored here,
+        // never guessed at or passed through.
+        const msgId = typeof wire.msgId === 'string' ? wire.msgId : '';
+        const patch = wire.patch as { interrupted?: unknown } | undefined;
+        if (!msgId || patch?.interrupted !== true) break;
+        this.emitEvent(
+          route({ kind: 'message.bot.amend', botId: BOT.id, msgId, patch: { interrupted: true } }),
+        );
         break;
       }
       case 'message.system':

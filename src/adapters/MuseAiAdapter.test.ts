@@ -300,6 +300,36 @@ describe('MuseAiAdapter commands + events', () => {
     });
   });
 
+  it('D4 follow-up: a wire message.bot.amend is translated and conversation-routed', async () => {
+    const ctx = makeAdapter();
+    const ws = await driveToReady(ctx);
+    const openP = ctx.adapter.openConversation('kavi', 'conv-main');
+    const openCmd = ws.framesOf('command').at(-1)!;
+    ws.frame({ kind: 'result', id: openCmd.id, ok: true, data: { messages: [] } });
+    await openP;
+    ws.frame({
+      kind: 'event',
+      event: { kind: 'message.bot.amend', botId: 'kavi', msgId: 'fx-bot-9', patch: { interrupted: true } },
+    });
+    expect(ctx.events.find((e) => e.kind === 'message.bot.amend')).toMatchObject({
+      kind: 'message.bot.amend',
+      msgId: 'fx-bot-9',
+      patch: { interrupted: true },
+      conversationId: 'conv-main',
+    });
+  });
+
+  it('D4 follow-up: malformed amends (no id, non-true patch) are ignored', async () => {
+    const ctx = makeAdapter();
+    const ws = await driveToReady(ctx);
+    const wire = (event: Record<string, unknown>) => ws.frame({ kind: 'event', event });
+    wire({ kind: 'message.bot.amend', botId: 'kavi', patch: { interrupted: true } });
+    wire({ kind: 'message.bot.amend', botId: 'kavi', msgId: 'fx-bot-9', patch: { interrupted: false } });
+    wire({ kind: 'message.bot.amend', botId: 'kavi', msgId: 'fx-bot-9' });
+    wire({ kind: 'message.bot.amend', botId: 'kavi', msgId: 42, patch: { interrupted: true } });
+    expect(ctx.events.filter((e) => e.kind === 'message.bot.amend')).toHaveLength(0);
+  });
+
   it('auto-reconnects after a close while connect intent stands', async () => {
     const ctx = makeAdapter();
     const ws = await driveToReady(ctx);

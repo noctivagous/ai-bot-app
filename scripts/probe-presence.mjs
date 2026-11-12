@@ -139,16 +139,18 @@ try {
   report.check('only bridge + extension checks still pass (Checks: 2/11)', /Checks: 2\/11/.test(pop1 ?? ''));
   await appPage.click('button[aria-label="Close connection panel"]');
 
-  // composer gating: the draft survived the loss, and a send attempt
-  // rejects not-ready with a toast instead of pretending to send
+  // composer gating: the draft survived the loss, and sending is
+  // structurally impossible while gated — since D1 the Send button
+  // renders only when the phase allows sending, so in the not-ready
+  // state there is no send control to attempt with at all (the older
+  // click-and-toast rejection this step used to assert is unreachable
+  // by construction now; absence + a preserved draft is the contract)
   const draftKept = await appPage.inputValue('[data-testid="composer"]');
   report.check('draft preserved verbatim across the tab loss', draftKept === DRAFT);
-  await appPage.click('[data-testid="send-btn"]');
-  await appPage.waitForSelector('[data-testid="toast"]', { timeout: 10_000 });
-  const toastText = await appPage.textContent('[data-testid="toast"]');
-  report.check('send with no tab rejects not-ready (toast)', /Send rejected/.test(toastText ?? ''), (toastText ?? '').trim());
+  const sendBtnCount = await appPage.locator('[data-testid="send-btn"]').count();
+  report.check('no Send button exists while the tab is gone (D1 gated-send contract)', sendBtnCount === 0, `count=${sendBtnCount}`);
   const draftAfterSend = await appPage.inputValue('[data-testid="composer"]');
-  report.check('draft still preserved after the rejected send', draftAfterSend === DRAFT);
+  report.check('draft still preserved in the gated state', draftAfterSend === DRAFT);
 
   await appPage.waitForTimeout(600); // let any flapping show itself
   report.check('exactly ONE system line for the loss', (await countIn(appPage, 'Connection error')) === 1,

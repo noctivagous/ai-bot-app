@@ -93,6 +93,14 @@ export type BotEvent =
   | { kind: 'message.user'; botId: string; msg: ChatMsg }
   | { kind: 'message.bot.delta'; botId: string; msgId: string; text: string }
   | { kind: 'message.bot.final'; botId: string; msg: ChatMsg }
+  // A post-final mutation of an already-delivered (or still in-flight)
+  // message — FEATURE-MAP D4 follow-up. Finals stay exactly-once and
+  // deduped by id; an amend is how a verdict that only becomes known
+  // after the settle (the client Activity entry concluding
+  // "Interrupted") reaches the record. The store applies it to the
+  // delivered message, or buffers it (bounded) for a final that has
+  // not landed yet; an amend for a message that never lands is dropped.
+  | { kind: 'message.bot.amend'; botId: string; msgId: string; patch: { interrupted: boolean } }
   | { kind: 'message.system'; botId: string; text: string; ts: string }
   | { kind: 'activity'; botId: string; widgetId: string; patch: unknown; transient: true }
   | { kind: 'action.ack'; botId: string; actionId: string; ok: boolean; detail?: string }
