@@ -195,6 +195,32 @@ finding. Every reply creates a panel entry (even one-word
 replies) under the same "Today" day-group — no separate Running
 section; state = icon (progress/clover → check) + outcome text.
 
+## S6 — Activity panel (survey-context entries only)
+
+Right slider 240–420px (same panel as S1). Header: Close panel,
+avatar + "Avatar options", name, status line (Connected green dot
+/ "Searching memories" / "is responding" + headset avatar),
+icon-only tabs Activity (pressed) / Approvals / Identity / Mail.
+Body: "1 scheduled task" header (expandable; heart-icon entry +
+"Every 30 minutes" + "See all scheduled tasks"); day groups
+("Today" expandable; Yesterday/dates same shape). Entry row:
+status icon + bold title + auto detail + relative time. Running
+vs history: same list, icon flips progress→check (or stopped
+icon + "Interrupted"). Expansion opens a detail DIALOG (not
+inline): heading status-word + title ("Complete ..."/"Error ...",
+description "Interrupted"), Close, step log (Started, tool steps
+with queries + result counts, Completed + Summary / Interrupted
+close). The dialog exposes raw internal tool traces (memory
+queries, result counts, store refs) — observed, not endorsed.
+Boundary: only test/survey entries expanded; scheduled entry
+row-form only; no owner content quoted.
+
+Desk implication: map S6 adapt stands — Running Now / Recently
+Finished is our grouping invention over one day-grouped list
+(D2 input, owner's call). Mirror icon-flip + outcome-text state
+language, entry row shape, step-log detail idea — but NOT raw
+internal tool traces.
+
 ## S5 — Working signals (same test chat, mid-stream screenshots)
 
 While generating: panel header shows "Kavi" + "is responding"
