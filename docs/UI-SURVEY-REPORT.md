@@ -89,18 +89,31 @@ semantics beyond panel tracking.
 The switcher is a persistent left "Side chats" navigator: Search
 box, "Side chat options" menu ("Keep chat panel visible" checked,
 "Show archived chats"), "Main chat" button, expandable "Side chats"
-header, "New side chat" first, then one button per thread. Rows are
-title-only buttons except the ACTIVE row, which adds relative age
-("just now", "3h") and a "More thread actions" menu. The Search box
-searches message content across chats: thread hits (title, age,
+header, "New side chat" first, then one button per thread
+(the `hatch-chat-switcher-trigger` dropdown of the brief/map
+picture is absent in side-thread layout — null in both threads;
+the navigator stands in its place). Rows show title + relative age
+("3h", "6h", weekday "Mon"/"Fri", "just now") — correction: NOT
+title-only; age renders in-row. The ACTIVE row adds a "More thread
+actions" menu: Pin, Rename, Archive, Delete (listed only on my own
+test chat's row, nothing invoked). Ordering recency-first is
+inferred from age labels, NOT observed (no re-sort witnessed).
+Searcher details: the Search box (name/placeholder "Search")
+matches message content across chats — thread hits (title, age,
 "Side chat" badge) and ellipsis-prefixed message-snippet hits.
 Switching swaps the center column to `/thread/<id>`; rail,
 navigator, and status panel persist. Selector survival verified
-across a room→test-chat→room switch (scroll, log+children, 10
-message items, composer, name leaf, Activity button/tab, panel all
-present in both threads).
+across a room→test-chat→room switch, both ends test chats I
+operate in (no owner conversation opened at any point): scroll,
+log+children, 10 message items, composer, name leaf, Activity
+button/tab, panel, chatcol 4, vtpane 3 — identical in both
+threads. (One transient: an aria-label Activity probe read zero in
+the room right after navigating back from Library; present before
+and after — render timing, so a probe must wait/re-check rather
+than treat one zero as absence.)
 
 Desk implication: map S2 adapt stands — records stay ours; mirror
-recency-first order and the search box in the table defaults; check
-Open/Pin/Archive against "More thread actions" when S11/S12 map
-the menus.
+recency-first order and the search box in the table defaults; the
+client row menu (Pin/Rename/Archive/Delete) vs ours
+(Open/Pin/Archive) suggests adding Rename behind a confirm and NOT
+mirroring Delete.
