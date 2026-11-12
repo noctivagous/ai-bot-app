@@ -490,6 +490,15 @@ schedule-adjacent label is the Manage-permissions
 loop as unobserved-with-reason (creation flows not
 triggered), not as a gap to chase.
 
+Map precisions (from room closeout, carried as stated): (1)
+the Permissions tab observes ask-policy — when Muse asks —
+which is a different layer from an approval's answer (allow
+once / always / deny); these labels do not substitute for the
+S7 specimen. (2) Per-connection granularity itself remains
+unobserved — it lives behind the unvisited
+Manage-permissions Connectors sub-view; the global defaults
+are what's witnessed.
+
 Desk implication: mirror the approval-default language
 verbatim ("Ask for some actions" vs "Always ask" + their
 one-line explanations) for any desk approval-default
