@@ -75,10 +75,18 @@ structural guesses until this check runs once:
    the content script could not find (e.g. "Composer found"). That
    means a selector in `selectors.js` needs tuning to the real page's
    structure — edit that one file (role/text/structural selectors only;
-   never generated class names), reload the extension in
-   `chrome://extensions`, and Reconnect in the app. The auth check
-   failing while you ARE signed in means the signed-in marker
-   selectors need the same treatment.
+   never generated class names), then REINSTALL the extension
+   (unpacked, from this folder) and reload the muse.ai tab. A bare
+   reload is not enough in scripted setups: some loaders snapshot
+   the folder at install time, so edits only take effect on
+   reinstall. The auth check failing while you ARE signed in means
+   the signed-in marker selectors need the same treatment.
+8. **If checks stall at partial pass** (e.g. bridge+extension pass
+   but the tab never registers): query the background worker with
+   `{ type: 'md-state' }` — it reports `{ bridgeOpen, tabRegistered }`
+   separately, which tells a bridge outage apart from a missed
+   tab registration (fixed by reloading the muse.ai tab so the
+   content script re-registers).
 8. **Try the loop:** open any conversation in the app, send a message —
    it should be typed into the real page's composer by the content
    script, sent with the page's own send control, and confirmed by

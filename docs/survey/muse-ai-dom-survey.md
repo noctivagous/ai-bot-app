@@ -123,3 +123,29 @@ brief (will not sign the owner out).
 - `activityDetail` / `activityOutcome`: no dedicated nodes found;
   detail = entry expanded content. Mapping TODO against a running task
   in Phase 3 (test-chat task I start myself).
+
+## 6. Phase 3 mechanics addendum
+
+- Real thread URLs: `/thread/<uuid>` (test side chat kept its id
+  across reloads). `data-message-id` values are per-item stable ids
+  (values never read — identifiers).
+- User-item `textContent` shape: `"You:<text>"` (visually-hidden
+  speaker marker). Assistant items: bare text, no prefix.
+- Send-button lifecycle: `button[aria-label="Send" i]` appears when
+  the composer is non-empty, removed ~1 render after clearing;
+  enabled while present. Enter-to-send untested.
+- Streaming: new assistant item is created empty (no
+  `data-message-role` until content arrives), then grows by suffix
+  append; settle-on-quiet (600 ms) verified — every reply finalized
+  exactly once with no indicator configured.
+- Working-signal candidates: 7 empty `[role="status"]` live regions
+  (rejected as fallback — would block settle); per-message
+  `DIV[aria-busy]` flags (`true` mid-generation, `false` at rest, 10
+  nodes) toggle by node replacement (attribute-mutation observer
+  saw no transitions). Proposed, unverified:
+  `[data-message-item][aria-busy="true"]`.
+- New-chat survival verified (`/thread/new` probe: scroll 1,
+  chatcol 4, vtpane 3, log present-but-empty, composer/name/
+  activity/panel present, signin/send absent). Reload survival
+  verified (test chat kept id + full history). Conversation-switch
+  survival NOT tested.
