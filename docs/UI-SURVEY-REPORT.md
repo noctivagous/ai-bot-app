@@ -323,3 +323,38 @@ it / More like this / Not interested) if the desk ever carries
 suggested items. "Show subtitles" gives the client word for a
 detail line the desk already renders — adopt "subtitles" if it
 names the same thing.
+
+## S10 — Artifacts / Library (structure + labels; no owner file or space names quoted)
+
+`/library/artifacts` (Spaces view): left "Library navigation"
+(searchbox "Search the Library"; H3 "Files" with links Spaces,
+Documents; H3 "Media" with links Images, Videos, Podcasts;
+"System files" link); banner H1 "Spaces" + "Select" + "Sort
+spaces" menu + "Create a space" (not triggered — creation flow,
+out of bounds). H3 "Recent" list: each row is name + type +
+"·" + age, exposed as one row button (name + type + age in the
+accessible name) + a "More options" button. Recent-row "More
+options" menu (labels only, invoked nothing): "Move to sidebar"
+/ "Pin" / "Share" / "Download" / "Delete". H2 "Quick Open"
+("Search for a file to open"). Videos, Podcasts, and System
+files destinations unvisited — nav labels known, interiors
+unobserved.
+
+`/library/media?view=images`: banner H1 "Images" + "Create an
+image" (not triggered); the body is a grid of image buttons
+(file names as accessible names — not quoted). No image opened
+(owner media, out of bounds).
+
+`?view=documents`: banner H1 "Documents" + Select + "Sort
+spaces" + "Create a document" (not triggered); empty state H2
+"No documents yet" — empty-state vocabulary captured.
+
+Age-format addendum (closes the S2 open question): Recent rows
+show relative hours ("11h ago"), weekday names, and month-day
+dates ("Nov 2" style) for older items — three tiers witnessed,
+no owner rows quoted.
+
+Desk implication: mirror the Recent-row shape (name + type +
+age + options) and the file action-label set Move to sidebar /
+Pin / Share / Download / Delete; the empty-state H2 pattern
+("No documents yet") is worth mirroring for empty desk lists.
