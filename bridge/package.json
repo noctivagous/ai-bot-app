@@ -1,0 +1,1 @@
+{"dependencies":{"ws":"8.18.3"},"description":"Mission Desk local bridge: relays app <-> Muse extension over localhost WebSocket and hosts the app's records (DESIGN.md §9, Q3). Binds 127.0.0.1 only.","name":"mission-desk-bridge","private":true,"scripts":{"start":"node bridge.mjs","test":"node --test"},"type":"module","version":"0.1.0"}

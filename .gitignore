@@ -1,0 +1,8 @@
+node_modules
+dist
+*.local
+
+# Bridge runtime state (§9): the pairing token and the records data file
+# are local secrets/state — never committed.
+bridge/.pairing.json
+bridge/data/
