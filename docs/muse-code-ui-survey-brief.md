@@ -102,3 +102,9 @@ appears/disappears, what state changes look like).
   owner's word** — the owner relays and pushes as with calibration.
 - Report back in chat with: branch name, tip commit, and any surface that
   could not be observed and why.
+- **You may also deliver the report directly to Kavi** in the chat the
+  owner wires up for this — paste it whole, however long it runs. There is
+  no size pressure on that channel and no need to compress, summarize, or
+  split it into excerpts; Kavi reads the full text and folds it into
+  `docs/FEATURE-MAP.md`. The branch copy remains the durable record; the
+  direct delivery is how it gets discussed.
