@@ -1,0 +1,468 @@
+/* Mission Desk — graphite + signal-amber instrument panel.
+   Shaded depth system, native (DESIGN.md §2.11 / shading direction):
+   background is the desk; panels float one step above it; controls are
+   RAISED keys (gradient, light top edge, dark bottom edge, soft shadow);
+   wells are SUNKEN (darker, inner shadow). States are read by appearance:
+   hover brightens, pressed/ON goes inset, selected is raised + amber edge,
+   disabled is flattened and shadowless. */
+
+:root {
+  --bg: #191c20;
+  --bg-deep: #14161a;
+  --panel-hi: #262b33;
+  --panel-lo: #21252c;
+  --ctl-hi: #3d434d;
+  --ctl-lo: #31363f;
+  --well: #131519;
+  --edge: #0c0e10;
+  --edge-light: rgba(255, 255, 255, 0.09);
+  --text: #eceff3;
+  --muted: #9aa3ad;
+  --faint: #6b7280;
+  --amber: #ffb224;
+  --amber-hi: #ffc65c;
+  --amber-lo: #e89a17;
+  --blue: #6ea8ff;
+  --green: #7fc97f;
+  --red: #e06c5c;
+  --radius: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #1b1e23, var(--bg) 120px);
+  color: var(--text);
+  font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.mono {
+  font-family: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10.5px;
+}
+
+button { font: inherit; color: inherit; }
+input, select, textarea { font: inherit; color: var(--text); }
+
+/* ---------- depth primitives ---------- */
+
+.raised {
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius);
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--panel-hi), var(--panel-lo));
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 2px 6px rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius);
+}
+
+.well {
+  background: var(--well);
+  border: 1px solid #0b0c0e;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius);
+}
+
+.btn {
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.14); }
+.btn:active {
+  background: linear-gradient(180deg, var(--ctl-lo), var(--ctl-hi));
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+.btn:disabled, .btn.flat {
+  background: #26282d;
+  box-shadow: none;
+  border-color: #1a1c1f;
+  color: var(--faint);
+  cursor: not-allowed;
+  filter: none;
+}
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber-lo));
+  color: #241a02;
+  font-weight: 600;
+  border-color: #6e4d08;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.btn-primary:active { background: linear-gradient(180deg, var(--amber-lo), var(--amber-hi)); }
+
+.btn-danger {
+  background: linear-gradient(180deg, #b05244, #8f3d31);
+  color: #ffe9e5;
+  border-color: #4d1f18;
+}
+
+/* segmented switch — sunken track, active segment raised with amber edge */
+.seg {
+  display: inline-flex;
+  background: var(--well);
+  border: 1px solid #0b0c0e;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 2px;
+}
+.seg-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 4px 14px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.seg-btn:hover { color: var(--text); }
+.seg-btn.on {
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border-color: var(--edge);
+  box-shadow: inset 0 2px 0 var(--amber), inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  font-weight: 600;
+}
+.seg-btn.flat {
+  color: var(--faint);
+  cursor: not-allowed;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* status lamp — dot sits in a small inset well and glows */
+.lamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--well);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  flex: none;
+}
+.lamp i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+  display: block;
+}
+.lamp .on-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.lamp .on-amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.lamp .on-red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.lamp .on-blue { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+
+/* shaded state pills */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 9px;
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light);
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.chip-running { background: linear-gradient(180deg, #2c4a78, #213a61); color: #cfe4ff; }
+.chip-waiting { background: linear-gradient(180deg, #6e5316, #57420f); color: #ffe1a1; }
+.chip-idle { background: linear-gradient(180deg, #33373e, #282c33); color: var(--muted); }
+.chip-done { background: linear-gradient(180deg, var(--amber-hi), var(--amber-lo)); color: #241a02; font-weight: 700; }
+.chip-parked { background: linear-gradient(180deg, #2b2e35, #23262c); color: var(--faint); }
+.chip-error { background: linear-gradient(180deg, #7c352a, #612a21); color: #ffd9d2; }
+.chip .pulse {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #333943, #2a2f37);
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light);
+  font-size: 11px;
+  color: var(--text);
+}
+.tag button { background: none; border: none; cursor: pointer; color: var(--muted); padding: 0; line-height: 1; }
+
+/* progress — well track, amber fill with a moving sheen */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--well);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+.progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber-lo));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  transition: width 0.6s ease;
+}
+.progress i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: sheen 1.8s linear infinite;
+}
+@keyframes sheen { from { background-position: 180% 0; } to { background-position: -80% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .progress i::after, .chip .pulse { animation: none; }
+}
+
+/* scrollbars — dark track, raised thumb */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge);
+  border-radius: 5px;
+}
+
+/* ---------- app layout ---------- */
+
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.topstrip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 14px;
+  background: linear-gradient(180deg, #262b33, #1e2228);
+  border-bottom: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 4px rgba(0, 0, 0, 0.4);
+  /* The top strip is the topmost chrome: its connection popover must paint
+     above the slide-over panels (z 40). As a flex item, z-index here
+     creates a stacking context — it must outrank the slide-overs. */
+  position: relative;
+  z-index: 60;
+}
+.wordmark { font-weight: 700; letter-spacing: 0.14em; font-size: 14px; }
+.wordmark span { color: var(--amber); }
+
+.lamp-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 10px;
+}
+.lamp-cluster:hover { filter: brightness(1.13); }
+
+.search-well { flex: 0 1 340px; margin-left: auto; }
+.search-well input, .field {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 6px 10px;
+  color: var(--text);
+}
+.field-wrap { padding: 0; }
+.field-wrap input, .field-wrap select { width: 100%; background: transparent; border: none; outline: none; padding: 6px 8px; }
+.field-wrap select option { background: var(--panel-lo); color: var(--text); }
+
+.rail {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px 4px;
+  overflow-x: auto;
+  flex: none;
+}
+.proj-card {
+  min-width: 196px;
+  max-width: 220px;
+  flex: 1 0 196px;
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+.proj-card:hover { filter: brightness(1.1); }
+.proj-card.selected {
+  box-shadow: inset 0 2px 0 var(--amber), inset 0 1px 0 var(--edge-light), 0 2px 6px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #2c333e, #252a33);
+}
+.proj-card .pname { font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 7px; }
+.proj-card .proll { color: var(--muted); font-size: 11.5px; margin-top: 4px; }
+.proj-card.new-card {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-weight: 600; min-height: 74px;
+}
+
+.viewbar { display: flex; align-items: center; gap: 12px; padding: 8px 14px 2px; flex: none; }
+
+.main { flex: 1; overflow-y: auto; padding: 8px 14px 26px; }
+
+.zone { margin-bottom: 16px; }
+.zone-title {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted); margin: 6px 0 8px;
+}
+.zone-title b { color: var(--text); }
+
+.rows { display: flex; flex-direction: column; gap: 7px; }
+.attn-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 12px;
+}
+.attn-row .grow { flex: 1; min-width: 0; }
+.attn-row.approval { box-shadow: inset 3px 0 0 var(--amber), inset 0 1px 0 var(--edge-light), 0 2px 6px rgba(0,0,0,.35); }
+.attn-row.done-row { box-shadow: inset 3px 0 0 var(--green), inset 0 1px 0 var(--edge-light), 0 2px 6px rgba(0,0,0,.35); }
+
+.jobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.job-card { padding: 11px 13px; }
+.job-card.running { box-shadow: inset 0 2px 0 var(--amber), inset 0 1px 0 var(--edge-light), 0 2px 6px rgba(0, 0, 0, 0.35); }
+.job-card .jtitle { font-weight: 600; font-size: 13.5px; }
+.job-card .jact { color: var(--muted); margin: 5px 0 8px; min-height: 16px; }
+.job-card .jmeta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+
+.split { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; align-items: start; }
+
+table.grid { width: 100%; border-collapse: collapse; }
+table.grid th {
+  text-align: left; padding: 7px 10px; color: var(--muted);
+  font-family: "IBM Plex Mono", Consolas, monospace; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  border-bottom: 1px solid #101215;
+}
+table.grid td { padding: 7px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.045); vertical-align: middle; }
+table.grid tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+
+.table-wrap { padding: 4px 6px 8px; overflow-x: auto; }
+select.cell-select {
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+  max-width: 170px;
+}
+select.cell-select option { background: var(--panel-lo); }
+.title-edit {
+  background: var(--well); border: 1px solid var(--amber); border-radius: 3px;
+  padding: 3px 6px; width: 100%; outline: none;
+}
+
+/* gantt */
+.gantt { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.gantt-day { padding: 8px; min-height: 190px; }
+.gantt-day .dlabel { color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.gbar {
+  padding: 5px 8px; margin-bottom: 6px; font-size: 11.5px;
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge); border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px rgba(0,0,0,.4);
+}
+.gbar .gtime { color: var(--muted); font-size: 10.5px; }
+.gbar.awaiting {
+  background: repeating-linear-gradient(45deg, #4d3d12 0 8px, #3d300d 8px 16px);
+  border-color: #6e5316; color: #ffe1a1;
+}
+
+/* artifacts */
+.art-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.art-card { padding: 12px 14px; }
+.prov {
+  margin-top: 9px; padding: 7px 9px;
+  font-family: "IBM Plex Mono", Consolas, monospace; font-size: 10.5px;
+  color: var(--muted); line-height: 1.7; word-break: break-word;
+}
+.prov b { color: var(--blue); font-weight: 500; }
+
+/* chat focus panel + artifact viewer (slide-overs) */
+.slideover {
+  /* Sits between the top strip and the status bar: the adapter lamp and
+     the live counts stay visible (and clickable) while a chat is open —
+     checking status mid-chat is the multitasking flow (§2.10). */
+  position: fixed; top: 47px; right: 0; bottom: 28px;
+  width: min(55%, 880px); min-width: 480px;
+  background: linear-gradient(180deg, #242932, #20242b);
+  border-left: 1px solid var(--edge);
+  box-shadow: -14px 0 34px rgba(0, 0, 0, 0.55), inset 1px 0 0 var(--edge-light);
+  z-index: 40; display: flex; flex-direction: column;
+}
+.slideover header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-bottom: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light);
+}
+.chat-body { flex: 1; overflow-y: auto; padding: 14px; margin: 10px; }
+.msg { max-width: 86%; padding: 8px 11px; margin-bottom: 9px; line-height: 1.45; }
+.msg.user { margin-left: auto; background: linear-gradient(180deg, #33507e, #2a4369); border: 1px solid #16283f; border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+.msg.bot { background: linear-gradient(180deg, var(--panel-hi), var(--panel-lo)); border: 1px solid var(--edge); border-radius: 6px; box-shadow: inset 0 1px 0 var(--edge-light); }
+.msg.system { margin: 4px auto 10px; max-width: 92%; text-align: center; color: var(--amber); background: none; border: none; font-size: 12px; }
+.msg .mtime { color: var(--muted); font-size: 10.5px; margin-top: 4px; }
+.composer { padding: 0 12px 12px; }
+.composer textarea {
+  width: 100%; min-height: 62px; resize: vertical;
+  background: transparent; border: none; outline: none; padding: 9px 10px;
+}
+.strip {
+  margin: 0 12px 8px; padding: 6px 10px; font-size: 12px;
+  border-radius: var(--radius); border: 1px solid #6e5316;
+  background: linear-gradient(180deg, #57420f, #46360c); color: #ffe1a1;
+}
+.strip.error-strip { border-color: #612a21; background: linear-gradient(180deg, #612a21, #4e211a); color: #ffd9d2; }
+
+/* connection popover */
+.popover {
+  position: absolute; top: 40px; right: 0; width: 380px; max-width: 92vw;
+  z-index: 50; padding: 12px 14px; max-height: calc(100vh - 90px); overflow-y: auto;
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 14px 34px rgba(0, 0, 0, 0.6);
+}
+.check-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.check-row .cstate { margin-left: auto; }
+.log-box { padding: 7px 9px; max-height: 150px; overflow-y: auto; font-size: 11px; line-height: 1.65; }
+.scenario-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* toasts */
+.toasts { position: fixed; right: 14px; bottom: 40px; z-index: 80; display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
+.toast { padding: 10px 13px; box-shadow: inset 0 1px 0 var(--edge-light), 0 10px 24px rgba(0, 0, 0, 0.55); }
+.toast.error { box-shadow: inset 3px 0 0 var(--red), inset 0 1px 0 var(--edge-light), 0 10px 24px rgba(0,0,0,.55); }
+
+/* status bar */
+.statusbar {
+  flex: none; display: flex; align-items: center; gap: 16px;
+  padding: 4px 14px; font-size: 11.5px; color: var(--muted);
+  background: linear-gradient(180deg, #22262d, #1b1e23);
+  border-top: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light);
+}
+.statusbar .right { margin-left: auto; display: flex; gap: 16px; align-items: center; }
+.stale { color: var(--red); font-weight: 700; }
+
+.empty-note { color: var(--faint); padding: 10px 12px; font-size: 12.5px; }
+.small { font-size: 11.5px; color: var(--muted); }
