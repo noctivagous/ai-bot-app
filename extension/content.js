@@ -66,6 +66,12 @@
     return r === 'user' ? 'user' : 'bot';
   };
   const msgTsOf = (el) => el.getAttribute('data-ts') || nowIso();
+  // The real page prefixes rendered user messages with a speaker marker
+  // ("You:" — visually hidden, present in textContent; surveyed
+  // 2026-11-12). Strip that one observed marker so confirmation and
+  // history compare against what was actually typed. Fixture texts
+  // carry no such prefix, so they pass through unchanged.
+  const stripSpeaker = (t) => t.replace(/^You:\s*/, '');
 
   // ---------- transport ----------
   // 'extension' mode: chrome.runtime messaging via the background worker.
@@ -294,12 +300,16 @@
     const listEl = first(S.messageList);
     if (!listEl) return null;
     return [...listEl.querySelectorAll(S.messageItem)]
-      .map((el) => ({
-        id: msgIdOf(el),
-        role: msgRoleOf(el),
-        text: (el.textContent ?? '').trim(),
-        ts: msgTsOf(el),
-      }))
+      .map((el) => {
+        const role = msgRoleOf(el);
+        const text = (el.textContent ?? '').trim();
+        return {
+          id: msgIdOf(el),
+          role,
+          text: role === 'user' ? stripSpeaker(text) : text,
+          ts: msgTsOf(el),
+        };
+      })
       .filter((m) => m.id);
   }
 
@@ -357,7 +367,7 @@
     for (const el of listEl.querySelectorAll(S.messageItem)) {
       const mid = msgIdOf(el);
       if (!mid || excludeIds.has(mid)) continue;
-      if (msgRoleOf(el) === 'user' && (el.textContent ?? '').trim() === text) return el;
+      if (msgRoleOf(el) === 'user' && stripSpeaker((el.textContent ?? '').trim()) === text) return el;
     }
     return null;
   }
