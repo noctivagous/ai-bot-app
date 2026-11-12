@@ -12,7 +12,8 @@ test chats only, read-only toward the owner's real conversations;
 approvals only if genuine, never simulated; no screenshots taken —
 prose layout descriptions; no push/merge without the owner's word.
 
-Status: S1 posted to the room; S2–S12 open.
+Status: all surfaces delivered (S1–S6, S8–S12); S7 carried
+unobserved (no genuine approval occurred).
 
 ## S1 — Shell & navigation
 
@@ -398,6 +399,136 @@ A "Clear search" button appears while a query is active.
 
 Desk implication: mirror the two-search split (global overlay
 vs in-list filter); mirror the switcher's two result kinds
-(thread hits with badge, ellipsis-prefixed snippet hits with
+(badged thread hits, ellipsis-prefixed snippet hits with
 owning-thread label) and the trailing query-as-command row if
 the desk's search takes actions as well as results.
+
+S11 follow-up (overlay kind labels): no badge or kind label
+witnessed in the "Search Muse" overlay options — kinds are
+distinguished by shape alone (title+snippet+age vs snippet
+only), unlike the switcher's badged thread hits.
+
+"Search chat" note (from the shortcuts dialog, tentative):
+pressing Shift-Meta-K produced no new dialog; focus sat in the
+Side-chats "Search" box — consistent with "Search chat" =
+focus the chat-list filter, but not isolated cleanly, so
+record as tentative rather than witnessed.
+
+## S12 — Settings, connectors, permissions (labels only; nothing changed)
+
+Settings is an H2 dialog: left nav General / Connectors /
+Wallet / Secure store / Permissions / Messaging channels /
+Devices / Data controls / Voice and avatar / Help & support /
+Legal info / Log out, plus Close. "Report an issue" (rail menu
+and Help tab) unopened — it leads to a form, out of bounds.
+
+- General: "Meta Account" row (password/security/personal —
+  structure only); Usage section (Power plan, weekly-limit
+  line, Manage subscription, Redeem invite code, Language —
+  values/numbers not quoted); Appearance section (Mode
+  Light/Dark/System; Theme color radios incl. "Match my
+  avatar"). One-line structure each; no control touched.
+- Keyboard shortcuts dialog (H2 + description + Close):
+  Window management (Open or close all panels; Step through
+  side panel states); General (Chat with Muse; Search Muse;
+  Search chat; Settings; Keyboard shortcuts); Composer
+  (Slash commands; Focus composer; Toggle dictation). Shortcut
+  glyphs witnessed as in S1; the newcomer is "Search chat".
+- Connectors: searchbox "Search connectors"; Available /
+  Connected tabs (Available pressed; Connected unvisited —
+  would show the owner's accounts, out of bounds). Category
+  H2s: Featured, Productivity, Social & Entertainment, Health
+  & Fitness, Business — each with "See all" and connector
+  buttons (product name + one-line access blurb + Connect /
+  View action). Connector names witnessed (product
+  vocabulary): Gmail, Google Calendar, Facebook, Google
+  Drive, Finances (Plaid), Google Sheets, Google Docs,
+  Outlook Mail, Instagram, Messenger, Threads, Instagram
+  Messages, Spotify, Withings, Peloton, Function Health,
+  HealthEx, Meta Business Manager, GitHub, Canva, Dropbox,
+  Zoom — names only, no blurbs quoted, nothing connected.
+- Permissions (the prize, labels only, no toggle touched):
+  "Connector defaults" radios — "Ask for some actions"
+  (checked; before actions that may share information or
+  make important changes) vs "Always ask" (before any
+  action). "Web access defaults" radios — "Ask for some
+  actions" (checked; when information may be shared or the
+  site is unfamiliar) vs "Always ask" (before accessing any
+  website). "Manage permissions" rows with counts:
+  Connectors, Websites, Spaces, Scheduled tasks (0), Direct
+  network protocols, plus "Reset approvals to defaults" —
+  sub-views unvisited, counts noted as labels.
+- Wallet: "Payment methods" section (structure only).
+- Secure store: "Secure credentials store" heading
+  (structure only).
+- Messaging channels: "Chat with your agent in other
+  messaging apps." + Available section; WhatsApp channel row
+  (name only).
+- Devices: "Phones & computers" section; device rows carry
+  name + Active marker + platform — shape only, values not
+  quoted.
+- Data controls: privacy blurb + "Learn more"; "Help improve
+  our AI models" toggle (present, untouched, state
+  unrecorded); "Import memory"; "Export your information";
+  "Reset Kavi" ("Permanently deletes your Muse data,
+  including chat history, files and active tasks." — UI copy
+  quoted as the consequence line). Nothing invoked.
+- Voice and avatar: Voice section with a selected-voice
+  control (name not quoted); "Live avatar" + "See your
+  avatar speak to you in real time during calls."
+- Help & support: "Muse Help Center", "Submit feedback",
+  "Report an issue" (labels only, unopened).
+- Legal info: AI-generation disclaimer + policy links
+  (Muse Privacy Policy, Muse Supplemental Terms, Meta Terms
+  of Service, Meta Privacy Policy, Meta AI Terms of Service).
+- Log out: not invoked.
+
+S8 loose end, final: no scheduled-task creation affordance
+surfaces anywhere in Settings either — the only
+schedule-adjacent label is the Manage-permissions
+"Scheduled tasks" row. Creation stays unmapped; closing the
+loop as unobserved-with-reason (creation flows not
+triggered), not as a gap to chase.
+
+Desk implication: mirror the approval-default language
+verbatim ("Ask for some actions" vs "Always ask" + their
+one-line explanations) for any desk approval-default
+control; treat connector names as product vocabulary to
+reuse; mirror the Import/Export/Reset row labels and the
+Reset consequence line if the desk ever carries them.
+
+## Closeout — branch, tip, and unobserved surfaces (and why)
+
+Branch: `feat/ui-survey` (cut clean from main @ 8374169).
+Tip commit recorded in the room closeout post; no push and no
+merge without the owner's word (not done).
+
+Surfaces complete: S1, S2, S3, S4, S5, S6, S8, S9, S10, S11,
+S12. S7 (approvals) unobserved — no genuine approval request
+occurred in any test chat; nothing simulated; the Approvals
+tab was not treated as a specimen.
+
+Deliberately unobserved (boundary, not gaps):
+- Main-chat top bar and main-chat layout specifics (opening
+  the main chat touches the owner's real conversation).
+- Create-a-space landing; Create-a-goal start; creation
+  forms generally (Report an issue, Create an image,
+  Create a document, Create a space) — creation flows not
+  triggered.
+- "Completed goals" destination; Videos / Podcasts / System
+  files interiors; Connected-connectors tab; Manage
+  permissions sub-views; "See more" / "View permissions"
+  destinations; goal/idea click destinations ("Let's do it",
+  "Open side-by-side chat") — all lead into owner material
+  or state changes.
+- Older-day chat separators and thread rows older than a
+  weekday (no owner thread opened to get them); "Sort
+  spaces" menu; empty-query Suggestions contents.
+- Scheduled-task creation entry point anywhere in the UI
+  (possibly chat-driven; not chased by creating one).
+
+Test chats used: the survey room itself, "Calibration send
+test" (calibration-era), and "Create Python add function"
+(fresh for S3/S4). No owner real conversation opened at any
+point. No screenshots committed; screenshots seen locally
+only.
