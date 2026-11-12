@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mission Desk bridge</title>
+<style>
+  body { font: 13px system-ui, sans-serif; width: 320px; margin: 0; padding: 12px; background: #17191d; color: #e8eaed; }
+  h1 { font-size: 13px; margin: 0 0 8px; }
+  p { color: #9aa3ad; line-height: 1.45; margin: 6px 0; }
+  code { font-family: ui-monospace, monospace; font-size: 11px; color: #ffd75e; }
+  label { display: block; margin: 10px 0 4px; color: #c9cfd6; }
+  input { width: 100%; box-sizing: border-box; background: #101216; color: #e8eaed; border: 1px solid #333842; border-radius: 6px; padding: 7px 8px; font-family: ui-monospace, monospace; font-size: 11px; }
+  button { margin-top: 10px; background: #ffb224; color: #17130a; border: none; border-radius: 6px; padding: 7px 12px; font-weight: 600; cursor: pointer; }
+  #state { margin-top: 10px; font-family: ui-monospace, monospace; font-size: 11px; }
+  .ok { color: #8fd48a; } .bad { color: #f0968d; }
+</style>
+</head>
+<body>
+  <h1>Mission Desk — Muse bridge</h1>
+  <p>
+    Paste the pairing token printed by the bridge on first run (stored in
+    <code>bridge/.pairing.json</code> next to the bridge). The token is kept in
+    extension storage only — it is never sent to any web page.
+  </p>
+  <label for="token">Pairing token</label>
+  <input id="token" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. 9f2c…" />
+  <button id="save">Save token</button>
+  <div id="state">Checking…</div>
+  <script src="popup.js"></script>
+</body>
+</html>
