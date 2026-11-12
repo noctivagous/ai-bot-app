@@ -246,17 +246,28 @@ unless a genuine request appears.
 
 "See all scheduled tasks" opens a "Scheduled tasks" DIALOG (not a
 view): Close, H2 "Scheduled tasks", H3 day-group "Daily", one
-entry row button per task ("Heartbeat / Every 30 minutes" shape:
-heart icon, title, cadence) — no tabs, no inputs, no create
-affordance anywhere in it. Entry detail dialog: H2 with the task
-title, Close, "Run history" (expandable, collapsed — interior
-deliberately not opened), "See more", "View permissions",
-"Delete". No edit/cancel invoked; no owner task content quoted
-beyond the row-form shape. Creation entry point unobserved
-(possibly chat-driven or in Settings — S12 may surface it; not
-chased by creating one). Time-format note: the example-row time
-in the room post read "6:35 am" in error; the entry and this
-report carry the correct "6:19 am" — single entry, no duplicate.
+entry row button per task ("<title> / Every 30 minutes" shape:
+heart icon, title, cadence; owner's title redacted, cadence
+pattern kept) — no tabs, no inputs, no create affordance anywhere
+in it. Entry detail dialog: H2 with the task title, Close,
+cadence text, "Run history" (expandable; on reopen rendered
+expanded showing run rows of status word + kind + time each —
+row shape only, values not quoted), "See more", "View
+permissions", "Delete". No edit/cancel/pause/resume affordance
+exists in either dialog — confirmed on reopen: the management set
+as observed is exactly Run history, See more, View permissions,
+Delete, nothing else. Nothing invoked; "See more" and "View
+permissions" destinations left unobserved (likely owner task
+detail/permissions). Creation AND edit both unmapped — a thinner
+management surface than the map assumed, which is itself the
+finding. Desk note: Delete lives one level deep in the detail
+dialog, not in-row; whether the client confirms before deleting
+is unobserved (Delete must never be invoked here), so a desk
+confirm is a desk choice with no client evidence either way —
+phrase it that way, not as mirroring. Time-format note: the
+example-row time in the room post read "6:35 am" in error; the
+entry and this report carry the correct "6:19 am" — single entry,
+no duplicate.
 
 Desk implication: mirror the management dialog shape (day-grouped
 task rows) and the entry affordance labels; creation flow stays
