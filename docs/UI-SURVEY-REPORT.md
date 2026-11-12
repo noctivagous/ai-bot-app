@@ -185,6 +185,16 @@ header + Stop control + running entry with progress→check icon
 flip. Mirror Stop and the flip; map the desk pulse to progressive
 text + header; treat "Unread updates" as seen-state.
 
+S5 probes: with the panel closed, NOTHING says working — top bar
+shows only the idle avatar chip. The named signal is panel-gated;
+the always-visible grammar is stream + Stop. Stop's name is
+verbatim "Stop"; clicking it stands the partial text unmarked,
+clears the composer, and ends the panel entry with outcome
+"Interrupted" (kept, distinct icon). Unmarked partials are a
+finding. Every reply creates a panel entry (even one-word
+replies) under the same "Today" day-group — no separate Running
+section; state = icon (progress/clover → check) + outcome text.
+
 ## S5 — Working signals (same test chat, mid-stream screenshots)
 
 While generating: panel header shows "Kavi" + "is responding"
