@@ -75,17 +75,40 @@ structural guesses until this check runs once:
    the content script could not find (e.g. "Composer found"). That
    means a selector in `selectors.js` needs tuning to the real page's
    structure — edit that one file (role/text/structural selectors only;
-   never generated class names), reload the extension in
-   `chrome://extensions`, and Reconnect in the app. The auth check
-   failing while you ARE signed in means the signed-in marker
-   selectors need the same treatment.
-8. **Try the loop:** open any conversation in the app, send a message —
+   never generated class names), then REINSTALL the extension
+   (unpacked, from this folder) and reload the muse.ai tab. A bare
+   reload is not enough in scripted setups: some loaders snapshot
+   the folder at install time, so edits only take effect on
+   reinstall. The auth check failing while you ARE signed in means
+   the signed-in marker selectors need the same treatment.
+8. **If checks stall at partial pass** (e.g. bridge+extension pass
+   but the tab never registers): query the background worker with
+   `{ type: 'md-state' }` — it reports `{ bridgeOpen, tabRegistered }`
+   separately, which tells a bridge outage apart from a missed
+   tab registration (fixed by reloading the muse.ai tab so the
+   content script re-registers).
+9. **Try the loop:** open any conversation in the app, send a message —
    it should be typed into the real page's composer by the content
    script, sent with the page's own send control, and confirmed by
    observing it land; the reply streams back into the app. Approvals
    that appear in the page appear in Needs You and resolve by clicking
    the real control; the Activity view's entries mirror into Running
    Now / Recently Finished.
+
+## Tab presence
+
+The app knows whether the Muse tab is actually there. The content
+script heartbeats to the bridge every ~2 s; closing the tab (or
+navigating it away from Muse) is reported immediately by the
+background worker, and 6 s of silence is treated as loss either way.
+While the tab is gone the app drops out of "ready": the tab-dependent
+checks fail with *"Muse tab closed or not responding — reopen
+muse.ai"*, the composer refuses to send (your draft is kept), and
+reopening the tab brings the app back to ready on its own — no
+Reconnect needed. See DESIGN.md §6.6 for the protocol. Troubleshooting:
+if the app claims the tab is gone while it is open, check the popup's
+bridge state first (a suspended background worker delays heartbeats;
+any message from the tab revives it), then reload the extension.
 
 ## Control Panel actions — the invokeAction mapping
 

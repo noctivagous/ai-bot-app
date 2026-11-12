@@ -719,6 +719,46 @@ from `status.lastEventAt`.
   layered over the snapshot, not a new phase) — this is what lets a frozen
   tab or a dead bridge be *seen* instead of silently believed.
 
+### 6.6 Tab presence protocol (Muse fuse)
+
+§6.5 staleness covers a dead *channel*; it cannot see a dead *tab* —
+the bridge and extension stay up, status frames simply stop arriving,
+and before this protocol the app sat at `ready` over a closed tab
+indefinitely (real-page calibration finding, 2026-11-12). Presence is
+therefore tracked explicitly, at the transport layer:
+
+- The **content script** beats `{kind:'presence', state:'alive'}` every
+  **~2 s** through the background worker, and sends a best-effort
+  `state:'gone'` on `pagehide`.
+- The **background worker** adds the fast path: `tabs.onRemoved` for
+  the registered tab, or `tabs.onUpdated` navigating it away from a
+  matched URL, sends `state:'gone'` immediately. The tab id is kept in
+  `chrome.storage.session` so a removal noticed after a worker restart
+  is still recognised; the timeout below is the backstop regardless.
+- The **bridge** owns presence freshness. Any extension traffic
+  (presence beat, status report, event, result) marks the tab alive.
+  Presence is lost on explicit `gone`, or after **> 6 s of silence**
+  (3 missed beats). While absent, the bridge synthesizes the status
+  report apps receive from the last real report with every
+  **tab-dependent check failed** — `tab`, `page`, `auth`, `composer`,
+  `messageList`, `observer`, `approvals`, `activity`,
+  `muse.activityPanel` — under the detail *"Muse tab closed or not
+  responding — reopen muse.ai"*. `bridge` and `extension` stay as they
+  are (they are true). The synthesized report has the ordinary snapshot
+  shape, so the adapter and `derivePhase` (§6.3) need no semantic
+  changes; presence loss is simply a required check failing, with its
+  usual consequences (error phase, composer gating per §7.3, exactly
+  one system line in / one out per §7.4).
+- Presence states are `unknown` (extension connected, no tab traffic
+  yet — reports pass through untouched), `present`, `absent`. On
+  recovery the bridge rebroadcasts the last real report immediately;
+  the content script's next probe cycle (≤ 5 s) refreshes it. Apps
+  connecting while absent are handed the gated report, not the stale
+  healthy one.
+- Presence frames are consumed by the bridge and never relayed; they
+  carry no page content. Constants are env-overridable for tests
+  (`MD_PRESENCE_TIMEOUT_MS`, `MD_PRESENCE_SWEEP_MS`).
+
 ## 7. How status appears in the app
 
 Each surface below already exists in the prototype in hard-coded form; the

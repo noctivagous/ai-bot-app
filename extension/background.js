@@ -12,13 +12,71 @@
 // Chrome wakes this worker on runtime messages from the content script
 // and on storage changes; when it restarts it reconnects. A status
 // heartbeat may therefore gap — the app shows STALE rather than lying.
+//
+// Tab presence (presence protocol): the content script beats every ~2s
+// and those beats flow through here as ordinary md-frame traffic. This
+// worker adds the fast path — when the registered tab is closed, or
+// navigates away from a matched URL, it tells the bridge 'gone'
+// immediately instead of waiting out the bridge's 6s silence timeout.
+// The registered tab id is mirrored into chrome.storage.session so an
+// onRemoved arriving after a worker restart can still be recognised;
+// if even that misses, the bridge timeout remains the backstop.
 
 const BRIDGE_URL = 'ws://127.0.0.1:7701';
+
+// Mirrors manifest.json content_scripts matches (+ any port for the
+// localhost fixture, as Chrome's match patterns behave there).
+const MATCHED_URL = /^(https:\/\/muse\.ai\/|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/fixture)/;
 
 let ws = null;
 let wsOpen = false;
 let museTabId = null;
 let reconnectTimer = null;
+
+async function persistTabId() {
+  try {
+    await chrome.storage.session?.set({ museTabId });
+  } catch {
+    // session storage unavailable — in-memory tracking still works
+  }
+}
+
+async function knownTabId() {
+  if (museTabId != null) return museTabId;
+  try {
+    const stored = await chrome.storage.session?.get('museTabId');
+    return typeof stored?.museTabId === 'number' ? stored.museTabId : null;
+  } catch {
+    return null;
+  }
+}
+
+function sendTabGone(tabId) {
+  if (wsOpen && ws) {
+    ws.send(JSON.stringify({ kind: 'presence', state: 'gone', tabId }));
+  }
+  // If the socket is down the frame is lost — the bridge's silence
+  // timeout (6s) is the designed backstop for exactly this case.
+}
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void (async () => {
+    const known = await knownTabId();
+    if (known == null || tabId !== known) return;
+    museTabId = null;
+    void persistTabId();
+    sendTabGone(tabId);
+  })();
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (tabId !== museTabId || !changeInfo.url) return;
+  if (!MATCHED_URL.test(changeInfo.url)) {
+    museTabId = null;
+    void persistTabId();
+    sendTabGone(tabId);
+  }
+});
 
 async function getToken() {
   try {
@@ -102,7 +160,10 @@ async function runCommand(cmd) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object') return undefined;
   if (msg.type === 'md-register') {
-    if (sender.tab?.id != null) museTabId = sender.tab.id;
+    if (sender.tab?.id != null) {
+      museTabId = sender.tab.id;
+      void persistTabId();
+    }
     sendResponse({ ok: true });
     return undefined;
   }

@@ -74,6 +74,7 @@ const ACTION_HINTS: Record<string, string> = {
   bridge: 'Start the bridge: npm start in the bridge/ folder, then Reconnect.',
   extension:
     'Install the Mission Desk extension (unpacked, from extension/) and enter the pairing token, then Reconnect.',
+  tab: 'Reopen muse.ai in a tab — the app reconnects on its own when the tab returns.',
   auth: 'Open muse.ai and sign in, then Reconnect',
   composer: 'The composer was not found — the muse.ai page may have changed. Reconnect to retry.',
 };

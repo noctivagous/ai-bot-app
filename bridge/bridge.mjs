@@ -25,7 +25,8 @@
 // logged here (only the file path is printed).
 //
 // Env overrides (tests/dev): MD_BRIDGE_PORT, MD_PAIRING_TOKEN,
-// MD_DATA_DIR, MD_PAIRING_FILE.
+// MD_DATA_DIR, MD_PAIRING_FILE, MD_PRESENCE_TIMEOUT_MS,
+// MD_PRESENCE_SWEEP_MS.
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -177,6 +178,99 @@ let extensionConn = null;
 let lastStatusReport = null;
 const pendingCommands = new Map(); // command id -> app socket
 
+// ---- tab presence (presence protocol) ----
+//
+// The bridge is the one place that can tell a live Muse tab from a
+// closed one: the content script beats every ~2s ({kind:'presence',
+// state:'alive'}), the background worker reports an explicit
+// {state:'gone'} when the tab closes or navigates away, and every
+// other frame from the extension (status / event / result) is also
+// traffic from a living tab. Presence is transport-level knowledge —
+// the bridge still never interprets message or event CONTENT.
+//
+// States: 'unknown' (extension connected, no tab traffic seen yet —
+// reports pass through untouched, exactly as before this protocol),
+// 'present', 'absent'. Absence is entered via the explicit gone
+// (fast path) or when a previously-present tab goes silent for
+// PRESENCE_TIMEOUT_MS (default 6000 = 3 missed beats, swept every
+// PRESENCE_SWEEP_MS). While absent, apps receive a status report
+// SYNTHESIZED from the last real one with every tab-dependent check
+// failed — the app's adapter + derivePhase cannot tell it apart from
+// a real report, which is the point: no app-side semantics change.
+// The real report is kept intact and rebroadcast on recovery.
+
+const PRESENCE_TIMEOUT_MS = Number(process.env.MD_PRESENCE_TIMEOUT_MS ?? 6000);
+const PRESENCE_SWEEP_MS = Number(process.env.MD_PRESENCE_SWEEP_MS ?? 500);
+const TAB_GONE_DETAIL = 'Muse tab closed or not responding — reopen muse.ai';
+const PRESENCE_GATED_CHECKS = [
+  'tab',
+  'page',
+  'auth',
+  'composer',
+  'messageList',
+  'observer',
+  'approvals',
+  'activity',
+  'muse.activityPanel',
+];
+
+let presenceState = 'unknown';
+let lastBeatAt = 0;
+
+function gatedReport() {
+  const base = lastStatusReport ?? { checks: [] };
+  const seen = new Set();
+  const checks = [];
+  for (const c of base.checks ?? []) {
+    if (PRESENCE_GATED_CHECKS.includes(c.id)) {
+      checks.push({ id: c.id, state: 'fail', detail: TAB_GONE_DETAIL });
+    } else {
+      checks.push(c);
+    }
+    seen.add(c.id);
+  }
+  for (const id of PRESENCE_GATED_CHECKS) {
+    if (!seen.has(id)) checks.push({ id, state: 'fail', detail: TAB_GONE_DETAIL });
+  }
+  return { ...base, checks };
+}
+
+function broadcastGatedStatus() {
+  broadcastApps({ kind: 'status', report: gatedReport() });
+}
+
+function noteTabGone() {
+  if (presenceState === 'absent') return;
+  presenceState = 'absent';
+  broadcastGatedStatus();
+  console.log('[bridge] tab presence lost — gating tab-dependent checks');
+}
+
+function noteTabAlive() {
+  lastBeatAt = Date.now();
+  if (presenceState === 'absent') {
+    presenceState = 'present';
+    // Recovery: the last REAL report is the best evidence until the
+    // content script's next probe cycle (≤5s) refreshes it.
+    if (lastStatusReport) broadcastApps({ kind: 'status', report: lastStatusReport });
+    console.log('[bridge] tab presence recovered');
+  } else {
+    presenceState = 'present';
+  }
+}
+
+function resetPresence() {
+  presenceState = 'unknown';
+  lastBeatAt = 0;
+}
+
+const presenceSweeper = setInterval(() => {
+  if (presenceState === 'present' && Date.now() - lastBeatAt > PRESENCE_TIMEOUT_MS) {
+    noteTabGone();
+  }
+}, PRESENCE_SWEEP_MS);
+presenceSweeper.unref?.();
+
 function send(ws, obj) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
 }
@@ -227,13 +321,17 @@ wss.on('connection', (ws) => {
         if (extensionConn && extensionConn !== ws) extensionConn.close(4402, 'replaced');
         extensionConn = ws;
         ws.mdRole = 'extension';
+        resetPresence();
         broadcastApps({ kind: 'extension', present: true });
         console.log('[bridge] extension connected');
       } else {
         ws.mdRole = 'app';
         appConns.add(ws);
         send(ws, { kind: 'hello-ack', extensionPresent: !!extensionConn });
-        if (lastStatusReport) send(ws, { kind: 'status', report: lastStatusReport });
+        // A fresh app gets the current truth: the gated report while
+        // the tab is absent, the last real report otherwise.
+        if (presenceState === 'absent') send(ws, { kind: 'status', report: gatedReport() });
+        else if (lastStatusReport) send(ws, { kind: 'status', report: lastStatusReport });
         console.log('[bridge] app connected');
       }
       return;
@@ -245,12 +343,22 @@ wss.on('connection', (ws) => {
     }
 
     if (ws.mdRole === 'extension') {
-      if (msg.kind === 'status') {
+      if (msg.kind === 'presence') {
+        // Consumed here, never relayed: presence is transport-level.
+        if (msg.state === 'gone') noteTabGone();
+        else noteTabAlive();
+      } else if (msg.kind === 'status') {
+        // A status report is written by the content script in the tab:
+        // it is itself proof the tab is alive.
+        lastBeatAt = Date.now();
+        presenceState = 'present';
         lastStatusReport = msg.report;
         broadcastApps({ kind: 'status', report: msg.report });
       } else if (msg.kind === 'event') {
+        noteTabAlive();
         broadcastApps({ kind: 'event', event: msg.event });
       } else if (msg.kind === 'result') {
+        noteTabAlive();
         const target = pendingCommands.get(msg.id);
         if (target) {
           pendingCommands.delete(msg.id);
@@ -286,6 +394,7 @@ wss.on('connection', (ws) => {
     }
     if (ws === extensionConn) {
       extensionConn = null;
+      resetPresence();
       broadcastApps({ kind: 'extension', present: false });
       console.log('[bridge] extension disconnected');
     }
