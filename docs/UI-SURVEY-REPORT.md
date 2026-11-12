@@ -167,6 +167,26 @@ Desk implication: mirror the materialising Send (D1).
 
 ## S5 — Working signals (same test chat, mid-stream screenshots)
 
+While generating: panel header "Kavi" + "Connected" becomes
+"Kavi" + "is responding" (list icon); avatar switches to a headset
+variant; composer Send becomes a dark square Stop button; reply
+text streams progressively into the card. A panel entry appears
+immediately (clover/progress icon + title + auto detail + time);
+on completion the icon flips to check-circle, "Connected" and the
+avatar restore, Stop reverts to Send. No spinner, no log status
+text. Structural correlate: per-item DIV[aria-busy] true
+mid-generation (node replacement, not mutation). Background
+visibility: the unviewed working chat's row shows a blue dot +
+"Unread updates" both mid-flight and after finish — seen-state,
+not working-state; no distinct working badge at row level.
+
+Desk implication: one "Kavi is working" grammar — is-responding
+header + Stop control + running entry with progress→check icon
+flip. Mirror Stop and the flip; map the desk pulse to progressive
+text + header; treat "Unread updates" as seen-state.
+
+## S5 — Working signals (same test chat, mid-stream screenshots)
+
 While generating: panel header shows "Kavi" + "is responding"
 (list icon) replacing "Connected"; avatar switches to a headset
 variant; composer Send becomes a dark square Stop button; reply
