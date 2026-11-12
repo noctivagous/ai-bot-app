@@ -54,6 +54,19 @@
     return null;
   };
 
+  // Message identity across both worlds (survey §3): the fixture tags
+  // items with data-msg-id / data-role / data-ts; the real page uses
+  // DIV[data-message-item] with data-message-id and
+  // data-message-role=user|assistant (no timestamp attribute — the
+  // caller falls back to now). One helper per attribute so every
+  // reader below stays world-agnostic.
+  const msgIdOf = (el) => el.getAttribute('data-msg-id') ?? el.getAttribute('data-message-id') ?? '';
+  const msgRoleOf = (el) => {
+    const r = el.getAttribute('data-role') ?? el.getAttribute('data-message-role');
+    return r === 'user' ? 'user' : 'bot';
+  };
+  const msgTsOf = (el) => el.getAttribute('data-ts') || nowIso();
+
   // ---------- transport ----------
   // 'extension' mode: chrome.runtime messaging via the background worker.
   // 'injected' mode (tests only): a direct WebSocket to the bridge,
@@ -135,8 +148,8 @@
       // Everything already in the list is HISTORY: seed it as finalised
       // so a later mutation can never re-stream old messages as if new.
       for (const el of listEl.querySelectorAll(S.messageItem)) {
-        const mid = el.getAttribute('data-msg-id');
-        if (mid && el.getAttribute('data-role') === 'bot') {
+        const mid = msgIdOf(el);
+        if (mid && msgRoleOf(el) === 'bot') {
           streamed.set(mid, (el.textContent ?? '').trim());
           finalised.add(mid);
         }
@@ -282,10 +295,10 @@
     if (!listEl) return null;
     return [...listEl.querySelectorAll(S.messageItem)]
       .map((el) => ({
-        id: el.getAttribute('data-msg-id') ?? '',
-        role: el.getAttribute('data-role') === 'user' ? 'user' : 'bot',
+        id: msgIdOf(el),
+        role: msgRoleOf(el),
         text: (el.textContent ?? '').trim(),
-        ts: el.getAttribute('data-ts') || nowIso(),
+        ts: msgTsOf(el),
       }))
       .filter((m) => m.id);
   }
@@ -335,18 +348,16 @@
   function messageIds() {
     const listEl = first(S.messageList);
     if (!listEl) return new Set();
-    return new Set(
-      [...listEl.querySelectorAll(S.messageItem)].map((el) => el.getAttribute('data-msg-id')),
-    );
+    return new Set([...listEl.querySelectorAll(S.messageItem)].map((el) => msgIdOf(el)));
   }
 
   function findUserMessage(text, excludeIds) {
     const listEl = first(S.messageList);
     if (!listEl) return null;
     for (const el of listEl.querySelectorAll(S.messageItem)) {
-      const mid = el.getAttribute('data-msg-id');
+      const mid = msgIdOf(el);
       if (!mid || excludeIds.has(mid)) continue;
-      if (el.getAttribute('data-role') === 'user' && (el.textContent ?? '').trim() === text) return el;
+      if (msgRoleOf(el) === 'user' && (el.textContent ?? '').trim() === text) return el;
     }
     return null;
   }
@@ -375,10 +386,10 @@
             kind: 'message.user',
             botId: BOT_ID,
             msg: {
-              id: landed.getAttribute('data-msg-id'),
+              id: msgIdOf(landed),
               role: 'user',
               text,
-              ts: landed.getAttribute('data-ts') || nowIso(),
+              ts: msgTsOf(landed),
             },
           });
           resolve({ kind: 'result', id, ok: true, data: { confirmed: true } });
@@ -406,7 +417,11 @@
   const finalised = new Set();
   let settleTimer = null;
 
-  const currentConversationId = () => 'chat-main';
+  // The real page is multi-conversation (main chat + side chats at
+  // /thread/<id>); the fixture is single-conversation. The path is the
+  // stable per-conversation ref in both worlds' spirit — the adapter
+  // already routes everything to the conversation it opened.
+  const currentConversationId = () => location.pathname || 'chat-main';
 
   function routeEvent(event) {
     sendEvent({ ...event, conversationId: currentConversationId() });
@@ -417,8 +432,8 @@
     if (!listEl) return;
     let changed = false;
     for (const el of listEl.querySelectorAll(S.messageItem)) {
-      const mid = el.getAttribute('data-msg-id');
-      if (!mid || el.getAttribute('data-role') !== 'bot' || finalised.has(mid)) continue;
+      const mid = msgIdOf(el);
+      if (!mid || msgRoleOf(el) !== 'bot' || finalised.has(mid)) continue;
       const text = (el.textContent ?? '').trim();
       const prev = streamed.get(mid) ?? '';
       if (text.length > prev.length && text.startsWith(prev)) {
