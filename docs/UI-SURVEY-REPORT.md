@@ -256,3 +256,8 @@ in Settings — S12 may surface it; not chased by creating one).
 Desk implication: mirror the management dialog shape (day-grouped
 task rows) and the entry affordance labels; creation flow stays
 unmapped until observed.
+
+S8 detail: the "Scheduled tasks" dialog has NO create affordance,
+no tabs, no inputs — H2 + Close + H3 day-group + entry rows
+only. Creation entry point unobserved anywhere in the UI
+(possibly chat-driven; not chased by creating one).
