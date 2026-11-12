@@ -352,9 +352,52 @@ spaces" + "Create a document" (not triggered); empty state H2
 Age-format addendum (closes the S2 open question): Recent rows
 show relative hours ("11h ago"), weekday names, and month-day
 dates ("Nov 2" style) for older items — three tiers witnessed,
-no owner rows quoted.
+no owner rows quoted. Scope note: the third tier is witnessed
+for the client's age vocabulary generally, from Library rows;
+on a thread row specifically it remains analogy, not direct
+witness, since no older thread row was seen.
+
+S10 confirmation: no in-chat artifact presentation was observed
+in any test chat — nothing any test chat produced rendered as a
+panel, card, or viewer; the code block's Download file is a
+message-block control, not an artifact surface. The Library is
+the only artifact surface witnessed. "Sort spaces" was never
+opened anywhere — stays unobserved.
 
 Desk implication: mirror the Recent-row shape (name + type +
 age + options) and the file action-label set Move to sidebar /
 Pin / Share / Download / Delete; the empty-state H2 pattern
 ("No documents yet") is worth mirroring for empty desk lists.
+
+## S11 — Search (dock overlay + switcher box; my terms only quoted)
+
+Two distinct searches, kept separate as established in S2.
+
+"Search Muse" dock overlay (Meta+K): H2 "Search Muse" dialog,
+combobox + "Clear search" button once text is entered,
+listbox "Suggestions". Query "add function" (my own test-chat
+term) returned 13 flat options — no group headings in the list
+(no role=group / command-group headings; one option pre-selected).
+Option shape: thread hits carry title + snippet + relative age
+("… ·47m ago" pattern); message hits carry snippet text.
+A trailing action row reads "<query> / Send message to Kavi"
+(a query-to-chat command row, not a result). Owner results seen
+in the list are reported grouping/labels only — no titles or
+snippets quoted; my own hits confirmed the option shape.
+Escape closes the dialog.
+
+Switcher "Search" box: typing "add function" filters the Side
+chats navigator in place into two result kinds — one thread hit
+first (title + age + "Side chat" badge; my own "Create Python
+add function" thread read "… 33m Side chat"), then
+ellipsis-prefixed message-snippet rows ("…<snippet> <age>
+<thread title>"; my own room/test-chat snippets confirmed the
+row shape). Owner snippet rows seen during the query are
+reported as row-shape only — no snippets or titles quoted.
+A "Clear search" button appears while a query is active.
+
+Desk implication: mirror the two-search split (global overlay
+vs in-list filter); mirror the switcher's two result kinds
+(thread hits with badge, ellipsis-prefixed snippet hits with
+owning-thread label) and the trailing query-as-command row if
+the desk's search takes actions as well as results.
