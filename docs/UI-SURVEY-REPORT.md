@@ -277,3 +277,49 @@ S8 detail: the "Scheduled tasks" dialog has NO create affordance,
 no tabs, no inputs — H2 + Close + H3 day-group + entry rows
 only. Creation entry point unobserved anywhere in the UI
 (possibly chat-driven; not chased by creating one).
+
+## S9 — Goals & Ideas (item anatomy + actions; structure/labels only)
+
+Ideas (`/ideas`): H1 "Ideas" + intro line ("always thinking"
+framing); "Open side-by-side chat" button. A "Featured ideas"
+region, then H2 category regions (witnessed: Financial
+Management, Productivity, Relationships, Health & Fitness,
+Shopping). Each idea = one full-width BUTTON (title + description
+in the accessible name) + one adjacent "More options for …"
+button. Idea "More options" menu (labels only, invoked nothing):
+"Let's do it" / "More like this" / "Not interested". No owner
+idea titles or descriptions quoted here.
+
+Goals (`/goals`): banner "Goals" H1 + "Goals options" menu; H2
+"Tracking" region of goal rows: checkbox "Mark <title> complete"
++ live status region + goal button (title + detail in the
+accessible name) + "Goal options" menu; "Show 10 more" button;
+H2 "Create a goal" region with category buttons Health,
+Relationships, Finance, Career, Interests, Productivity,
+Something else (not started — categories already observed).
+Goal-row "Goal options" menu (labels only, invoked nothing):
+"Discuss" / "Rename" / "Add subgoal" / "Complete" / "Delete".
+Banner "Goals options" menu: menuitemcheckboxes "Show subtitles"
+(checked) and "Sort automatically", plus "Completed goals" —
+"Completed goals" left unvisited (invoking it was out of bounds),
+so completed-state vocabulary stays unobserved. No checkbox
+ticked; no owner goal titles or details quoted.
+
+Vocabulary finds: the goal detail line under each title is
+called "subtitles" in client terms ("Show subtitles" toggle);
+row actions use Discuss/Rename/Add subgoal/Complete/Delete
+(compare thread rows' Pin/Rename/Archive/Delete — no Archive
+here, Discuss and Add subgoal instead). "Parked" appears
+informally inside owner detail prose, but parked/completed STATE
+vocabulary is unobserved (no state
+badges or tabs witnessed on rows) — D3 input stays the owner's;
+documenting form only, never deciding parked/un-parked.
+
+Desk implication: mirror the goal-row shape (complete-checkbox +
+title + subtitle + options menu) and the action-label set
+Discuss / Rename / Add subgoal / Complete / Delete; mirror the
+idea-row shape (full-width button + More options with Let's do
+it / More like this / Not interested) if the desk ever carries
+suggested items. "Show subtitles" gives the client word for a
+detail line the desk already renders — adopt "subtitles" if it
+names the same thing.
