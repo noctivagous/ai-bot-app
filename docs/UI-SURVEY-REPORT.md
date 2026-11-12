@@ -141,12 +141,45 @@ dropping ours, not demoting to hover. Show the "Kavi" name leaf on
 groups, group consecutive messages, centered-pill separators,
 placement + name distinction.
 
+S3 probes (all in test chats): Shift+Enter inserts a newline, no
+send (S4 blocker closed). Date pill is top-of-log per day, not
+between exchanges; older-day formats unobserved. Name leaf is
+panel-header-only here (inside the status-panel avatar card) —
+calibration's avatar-stage twin is layout-dependent. User actions
+verbatim: More options / Copy response / Reply; assistant:
+React / Reply / More options. User More-options menu: Delete
+only, listed never invoked. Assistant menu: Copy, Share. Chips =
+1–3 word replies; cards = paragraphs/lists/code (exact boundary
+unwitnessed). Corrections carried: name leaf on groups would be a
+deliberate desk difference, not a mirror; mirroring timestamps
+means dropping ours.
+
 ## S4 — Composer (same test chat)
 
 Empty: placeholder "Message" + Attach file + Dictate a message
 (+ mic affordance in some layouts), no Send. Non-empty: Send
 appears, nothing else joins. Enter sends (verified twice).
-Shift+Enter untested (recorded, not risked). The client already
-materialises Send on text — parity input for owner decision D1.
+Shift+Enter inserts a newline (verified, draft cleared after).
+The client already materialises Send on text — parity input for
+owner decision D1.
 
 Desk implication: mirror the materialising Send (D1).
+
+## S5 — Working signals (same test chat, mid-stream screenshots)
+
+While generating: panel header shows "Kavi" + "is responding"
+(list icon) replacing "Connected"; avatar switches to a headset
+variant; composer Send becomes a dark square Stop button; reply
+text streams progressively into the card (caught mid-sentence).
+A new panel entry appears immediately with a clover/progress icon
++ title + auto detail + time; on completion the icon flips to a
+check-circle. On finish: "Connected" + green dot restored, avatar
+normal, Stop reverts to Send on the cleared composer. No spinner,
+no separate status text in the log. Structural correlate:
+per-item DIV[aria-busy] toggles true mid-generation (nodes appear
+replaced, not mutated).
+
+Desk implication: one "Kavi is working" grammar — header line +
+Stop control + running entry with a distinct progress icon that
+flips to check on completion. Mirror the Stop affordance; map the
+desk pulse to their progressive text + is-responding header.
