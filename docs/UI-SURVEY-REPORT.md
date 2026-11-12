@@ -221,6 +221,17 @@ Finished is our grouping invention over one day-grouped list
 language, entry row shape, step-log detail idea — but NOT raw
 internal tool traces.
 
+S6 probes: dialog pairings pinned — row outcome "Interrupted" →
+dialog heading "Error <title>" with description "Interrupted",
+body opens on the status word then the step log; finished rows →
+heading "Complete <title>", step log closing on "Completed" +
+"Summary". Status-line vocabulary witnessed: Connected (green
+dot), "Searching memories", "is responding" (list icon) — working
+phases only, no others seen. Example test row, verbatim (my
+content): "Explain send button states / Explained empty, typing,
+sending, sent, and error states / 6:19 am" — titles are
+agent-summarised task names, details auto past-tense summaries.
+
 ## S5 — Working signals (same test chat, mid-stream screenshots)
 
 While generating: panel header shows "Kavi" + "is responding"
