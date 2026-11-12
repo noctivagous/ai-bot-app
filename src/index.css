@@ -333,6 +333,12 @@ input, select, textarea { font: inherit; color: var(--text); }
 }
 .zone-title b { color: var(--text); }
 
+/* Activity umbrella heading (D2) — one step above .zone-title: same
+   mono/token language, slightly larger so the grouping reads. */
+.activity-head { font-size: 12px; margin: 2px 0 4px; }
+.activity-head b { font-size: 13px; letter-spacing: 0.12em; }
+.activity-sub { margin: 0 0 12px; }
+
 .rows { display: flex; flex-direction: column; gap: 7px; }
 .attn-row {
   display: flex; align-items: center; gap: 12px;

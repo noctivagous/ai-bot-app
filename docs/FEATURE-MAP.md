@@ -5,9 +5,11 @@
 **not pushed — holding for the owner's word**) and the survey room's
 record. 11 of 12 surfaces delivered; S7 closed as unobserved (no genuine
 approval occurred — the standing rule is never to simulate one). Verdicts
-below are firmed by evidence but remain the owner's to judge; owner
-decisions D1–D3 are queued at the end with recommendations. Nothing here
-is a build order yet.
+below are firmed by evidence. **Owner decisions D1–D4 were DECIDED on
+2026-11-12, per the recommendations** (see the decisions section); the
+first refinement tranche — D1, D2, D4 built, D3 as a design sketch
+(`docs/GOALS-IDEAS-SKETCH.md`), build parked — is on branch
+`feat/ui-refinements`.
 
 Verdicts: **mirror** (same words/behaviour — it is the product's, not ours)
 · **adapt** (same job, desk form) · **different** (deliberately not mapped).
@@ -17,7 +19,7 @@ Verdicts: **mirror** (same words/behaviour — it is the product's, not ours)
 | S1 | Shell: icon-only dock rail (Chat ⌘J, Search ⌘K; spaces group Feed/Ideas/Goals/Library; then Create a space, Get the Muse app, Settings menu). Centre chat column. Right status panel 240–420px, resizable, persists across views. **No standalone Activity toggle**: the panel opens from the avatar/Kavi button; its header tabs are **Activity / Approvals / Identity / Mail**. Main-chat top bar **unobserved** (escalated — see Open items). | TopStrip: wordmark, mode segment, search well, adapter cluster; view segment below | adapt | Keep desk chrome ours; adopt Muse's names where the thing is the same (Activity, Search). The avatar button is R1 done right — one button that plainly opens a panel; the adapter cluster should read the same way (R1, R4). |
 | S2 | Switcher is a **persistent left navigator** ("Side chats"), not a dropdown: search box, "Side chat options" menu ("Keep chat panel visible", "Show archived chats"), "Main chat" button. **Selector survival across a switch: tested between two test chats and closed** — the calibration gap is shut (counts in the report). | Conversations table (app-owned records) + Inbox tray | adapt | Records stay ours. Mirror the navigator's recency/search defaults in the table. The survival result also clears the extension's riskiest unknown. |
 | S3 | Rendered log: date separator = centred **time-only pill** ("6:16 AM", same-day; older formats unobserved). User messages: right-aligned pale-teal pills, no visible name ("You:" is DOM-only). Agent messages: short = small grey chips, long/multi-part = light-grey rounded cards (multi-part stays in one card); code blocks carry a language label + Download file / Copy Code. **The agent name leaf appears nowhere in the log** — "Kavi" lives only in the panel header. **No timestamps anywhere; hover shows nothing.** Per-message actions exist (user: More options / Copy response / Reply; agent: React / Reply / More options). | ChatPanel: anonymous bot bubbles, blue user bubbles, a timestamp under **every** message | mirror, with two recorded exceptions | Mirror: centred time pills as separators, placement+container distinction (drop "blue = user" as the only signal), one-card multi-part replies. **Exceptions, both deliberate differences if kept:** a name leaf on agent groups (the client has none in the log), and any timestamps at all (the client has none — "demote to hover" is not mirroring; keeping hover timestamps is a desk choice, to be owned as one). |
-| S4 | Composer: empty state = placeholder "Message" + Attach file + Dictate, **no Send**; typing adds Send and nothing else. **Enter sends, Shift+Enter newlines — both verified.** | ChatPanel composer: Send always rendered, dimmed when empty; Enter sends, Shift+Enter newlines (already matching) | **owner decision D1** | Evidence favours mirroring: our keyboard semantics already match exactly; only the button's existence differs. Muse Code's recommendation into D1: mirror the materialising Send. |
+| S4 | Composer: empty state = placeholder "Message" + Attach file + Dictate, **no Send**; typing adds Send and nothing else. **Enter sends, Shift+Enter newlines — both verified.** | ChatPanel composer: Send always rendered, dimmed when empty; Enter sends, Shift+Enter newlines (already matching) | **D1 — DECIDED: mirror** (owner, 2026-11-12; built in the first tranche) | Evidence favours mirroring: our keyboard semantics already match exactly; only the button's existence differs. Muse Code's recommendation into D1: mirror the materialising Send. |
 | S5 | Working grammar, always-visible part: **the stream itself + a "Stop" button** (verbatim). Everything else is panel-gated: with the panel open, the header swaps "Connected" (green dot) for "is responding", the avatar switches, entries show a progress icon; **with the panel closed, nothing anywhere says working**. Stop stands the partial as a normal message, **unmarked as cut short**; its panel entry ends "Interrupted". Per-item `aria-busy` candidate from calibration stands as the mechanism. | Streaming bubble with amber pulse; job cards with progress sheen; pulsing chips; glowing lamp — four "working" dialects | adapt | One grammar (R-list): the pulse, everywhere, plus a slim "Kavi is working" line in the chat — recorded as a **desk surfacing of what the client gates**, not a mirror. **New question for the owner (D4):** mark interrupted partials as cut short (client doesn't; desk could — a deliberate difference with real value for records)? |
 | S6 | Activity: **every reply creates an entry** (one-word replies included), all in **one day-grouped list** ("Today") — **no separate Running section**; state is icon (progress while running, check when done) + outcome text. Entry dialogs are asymmetric: an "Interrupted" outcome opens **"Error \<title\>"** (body: status word, Started, tool steps, Queries, Result), a finished one **"Complete \<title\>"** (Completed + Summary). The "Error" prefix conflates interruption with failure — a client inconsistency, recorded as found, not copied. | Board zones (Needs You / Work in Flight / Recently Finished), one live slot per conversation | adapt | The desk's Running/Finished split is **our grouping invention** over the client's single list — keep it (cross-chat aggregation is the desk's value) and label it as ours. The §2.10 premise is restored: Activity *can* feed the board, per-reply. Direct input to D2. |
 | S7 | **Unobserved — closed as such.** No genuine approval occurred during the survey; selectors remain fixture-fitted (calibration status unchanged). | Needs You approval rows, scopes wired on the fixture (slice 6) | mirror the wording, when a specimen exists | Nothing to fit yet. The first genuine approval in real use is still the test. S12's precision applies: the client's Permissions defaults are an **ask-policy** layer (whether it asks), distinct from an approval's **answer** (allow once / always / deny) — our scope model already matches the answer layer. |
@@ -82,26 +84,37 @@ Desk-internal; unchanged from v0.1 except where noted.
   sheen and lamp-glow demote to supporting roles. Interrupted partials
   are D4's question, not a default.
 
-## Owner decisions queued
+## Owner decisions — DECIDED (owner, 2026-11-12, per recommendations)
 
 - **D1 (S4):** composer send behaviour. Evidence: the client materialises
   Send on text; our keyboard semantics already match (Enter sends,
   Shift+Enter newlines). *Recommendation: mirror — materialise on text.*
+  **DECIDED: mirror. Built in the first refinement tranche
+  (`feat/ui-refinements`).**
 - **D2 (S6):** Board zone naming. Evidence: the client's Activity is one
   day-grouped list under the word "Activity"; our zones are a grouping
   invention. *Recommendation: adopt "Activity" as the Board's umbrella
   heading, keep Needs You / Work in Flight / Recently Finished as our
   zones under it — the correspondence reads, the invention stays labelled
-  as ours.*
+  as ours.* **DECIDED: adopt. Built in the first tranche (the zones in
+  the code are NEEDS YOU / RUNNING NOW / RECENTLY FINISHED).**
 - **D3 (S9):** Goals & Ideas. Evidence: both surfaces' forms are now
   documented (S9). *Recommendation: keep the build parked; commission the
   counterpart sketch (Goals as a read-mostly Board zone, Ideas as
   proposals) as design only, so un-parking later is a build, not a
-  research project.*
+  research project.* **DECIDED: sketch commissioned —
+  `docs/GOALS-IDEAS-SKETCH.md`; the build stays parked until the owner
+  un-parks it.**
 - **D4 (S5, new):** interrupted partials. The client leaves a stopped
   reply standing unmarked. *Recommendation: mark ours ("Interrupted" in
   the conversation record) — the desk keeps records, and a record that
   hides a truncation misleads; record it as a deliberate difference.*
+  **DECIDED: mark ours. Built in the first tranche: flag on the message
+  model, mock script + ChatPanel marker end-to-end. The real adapter's
+  correlation of an Activity "Interrupted" outcome to a final is a
+  recorded follow-up (see the comment at the `message.bot.final` case
+  in MuseAiAdapter) — the wire frames share no identity and no
+  ordering guarantee, so no heuristic was wired.**
 
 ## Open items
 

@@ -376,6 +376,22 @@ export class MuseAiAdapter implements BotServiceAdapter {
         if (!msg?.id || this.finalisedIds.has(msg.id)) break; // dedupe
         this.finalisedIds.add(msg.id);
         this.streamBuffers.delete(msg.id);
+        // D4 FOLLOW-UP (FEATURE-MAP S5/D4, decided 2026-11-12): the desk
+        // marks interrupted partials (ChatMsg.interrupted), but the
+        // correlation is deliberately NOT wired here yet. The client's
+        // "Interrupted" verdict lives on the Activity panel entry, which
+        // reaches this adapter as an independent `activity` frame: panel
+        // entries carry no id linking them to a message (survey S6),
+        // routing here is by conversation only (so an unrelated
+        // interrupted activity in the same conversation would be a
+        // false positive), and there is no ordering guarantee against
+        // this settle-driven final — with the app deduping finals by
+        // message id, a late-arriving outcome could not amend a final
+        // already delivered. A correct wiring needs the content script
+        // to link the outcome to the message (or an amend event kind);
+        // until then, no heuristic. If the wire msg ever arrives with
+        // `interrupted` already stamped, the spread below passes it
+        // through unchanged.
         // Parse intents out of the completed text: the final carries
         // the CLEAN text; intents become their own events (§10).
         const parsed = parseIntents(msg.text ?? '');

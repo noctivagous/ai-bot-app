@@ -343,6 +343,15 @@ export class MockAdapter implements BotServiceAdapter {
     // are parsed out by the shared parser: deltas carry the CLEAN text
     // only, and the intents are emitted as their own events right after
     // the final — exactly the real adapter's behaviour (§10).
+    //
+    // D4 scripted path (FEATURE-MAP S5/D4, decided 2026-11-12): a send
+    // whose text says "interrupt" gets the CUT-SHORT reply — it streams
+    // only the head of its full text, then finalizes with exactly the
+    // streamed prefix and `interrupted: true`, and the conversation's
+    // activity concludes with outcome "Interrupted" — the same pair of
+    // signals the client produces when a reply is stopped (survey
+    // S5/S6), in mock form.
+    const interrupted = /interrupt/i.test(text);
     const rawReply = /propose a session/i.test(text)
       ? [
           'Here is a proposed session, plus the map artifact it belongs with.',
@@ -355,12 +364,19 @@ export class MockAdapter implements BotServiceAdapter {
           '{"type":"webview","title":"Chinese map + timeline outline","ref":"art-chinese-map"}',
           '```',
         ].join('\n')
-      : `Mock reply — I received “${text.length > 60 ? `${text.slice(0, 60)}…` : text}”. ` +
-        'This is MockAdapter’s scripted streaming reply; the real conversation arrives through the Muse adapter.';
+      : interrupted
+        ? 'Mock reply — the full answer that was on its way: the summary first, ' +
+          'then the working in full, then the caveats, the edge cases and the follow-ups.'
+        : `Mock reply — I received “${text.length > 60 ? `${text.slice(0, 60)}…` : text}”. ` +
+          'This is MockAdapter’s scripted streaming reply; the real conversation arrives through the Muse adapter.';
     const parsed = parseIntents(rawReply);
     const reply = parsed.cleanText;
     const msgId = `mock-reply-${++this.counter}`;
-    const chunks = chunkText(reply, 5);
+    const allChunks = chunkText(reply, 5);
+    // A cut-short reply delivers only its head; the final then carries
+    // exactly what was streamed (the delta/final invariant holds).
+    const chunks = interrupted ? allChunks.slice(0, 2) : allChunks;
+    const finalText = chunks.join('');
     chunks.forEach((chunk, i) => {
       this.after(140 * (i + 1), () => {
         this.emitEvent({ kind: 'message.bot.delta', botId, msgId, text: chunk }, conversationId);
@@ -370,10 +386,33 @@ export class MockAdapter implements BotServiceAdapter {
       const finalMsg: ChatMsg = {
         id: msgId,
         role: 'bot',
-        text: reply,
+        text: finalText,
         ts: new Date(this.scheduler.now()).toISOString(),
+        ...(interrupted ? { interrupted: true } : {}),
       };
       this.emitEvent({ kind: 'message.bot.final', botId, msg: finalMsg }, conversationId);
+      if (interrupted) {
+        // The panel-side half of the pair (survey S6): this reply's
+        // activity entry concludes with outcome "Interrupted", which
+        // the app files under Recently Finished like any conclusion.
+        this.emitEvent(
+          {
+            kind: 'activity',
+            botId,
+            widgetId: conversationId,
+            transient: true,
+            patch: {
+              conversationId,
+              activityId: `reply-${msgId}`,
+              state: 'done',
+              activity: 'Reply interrupted',
+              outcome: 'Interrupted',
+              elapsedSec: 1,
+            },
+          },
+          conversationId,
+        );
+      }
       for (const intent of parsed.schedule) {
         this.emitEvent({ kind: 'intent.schedule', botId, intent }, conversationId);
       }

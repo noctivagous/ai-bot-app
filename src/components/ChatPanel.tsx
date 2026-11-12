@@ -75,6 +75,17 @@ export function ChatPanel({
           ) : (
             <div className={`msg ${m.role}`} key={m.id}>
               <div>{m.text}</div>
+              {/* D4 (FEATURE-MAP S5, decided 2026-11-12): the client
+                  leaves a stopped reply standing unmarked; the desk
+                  marks it, in the existing chip grammar. Normal finals
+                  never carry the flag, so they never show this. */}
+              {m.role === 'bot' && m.interrupted && (
+                <div style={{ marginTop: 5 }}>
+                  <span className="chip chip-waiting" data-testid="interrupted-marker">
+                    Interrupted
+                  </span>
+                </div>
+              )}
               <div className="mtime mono" style={{ textTransform: 'none', letterSpacing: 0 }}>
                 {new Date(m.ts).toLocaleTimeString([], { hour12: false })}
               </div>
@@ -130,14 +141,16 @@ export function ChatPanel({
             via {status?.adapterId === 'muse-ai' ? 'Muse AI adapter' : 'MockAdapter'} · phase: {phase}
             {snap.stale ? ' · stale' : ''}
           </span>
-          <button
-            className={`btn ${canSend ? 'btn-primary' : ''}`}
-            onClick={onSend}
-            disabled={draft.trim() === ''}
-            data-testid="send-btn"
-          >
-            Send
-          </button>
+          {/* D1 (FEATURE-MAP S4, decided 2026-11-12): mirror the client —
+              Send MATERIALISES on text. It renders only while the draft
+              is non-empty and the phase allows sending; an empty draft
+              (or a gated phase, where the strips above explain and the
+              draft is preserved) shows no Send button at all. */}
+          {canSend && draft.trim() !== '' && (
+            <button className="btn btn-primary" onClick={onSend} data-testid="send-btn">
+              Send
+            </button>
+          )}
         </div>
       </div>
     </div>

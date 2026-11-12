@@ -29,6 +29,12 @@ export interface ChatMsg {
   role: 'user' | 'bot' | 'system';
   text: string;
   ts: string; // ISO timestamp
+  /** Set when a bot reply was cut short (in the client, the user pressed
+   * Stop): `text` is the partial, standing as a normal message. The
+   * client itself leaves such partials unmarked; the desk marks them
+   * (FEATURE-MAP D4, decided 2026-11-12) because its conversation
+   * records should not hide a truncation. Absent on normal finals. */
+  interrupted?: boolean;
 }
 
 export interface SurfaceAction {

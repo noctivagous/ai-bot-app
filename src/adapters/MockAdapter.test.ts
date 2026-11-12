@@ -428,3 +428,50 @@ describe('MockAdapter bots + activity lifecycle (slices 1–2)', () => {
     expect(typeof donePatch.detail).toBe('string');
   });
 });
+
+describe('MockAdapter interrupted replies (D4, FEATURE-MAP S5)', () => {
+  it('an "interrupt" send streams only the head, finalizes it marked, with an Interrupted activity outcome', async () => {
+    const { adapter, scheduler, events } = makeAdapter('happy');
+    void adapter.connect();
+    scheduler.advance(1000);
+    await adapter.openConversation('kavi', 'conv-main');
+    await adapter.sendMessage('kavi', 'please interrupt this reply partway', 'm-cut');
+    scheduler.advance(3000);
+    const deltas = events.filter((e) => e.kind === 'message.bot.delta');
+    const finals = events.filter((e) => e.kind === 'message.bot.final');
+    expect(finals).toHaveLength(1);
+    const final = finals[0]!;
+    expect(final.kind === 'message.bot.final' && final.msg.interrupted).toBe(true);
+    const finalText = final.kind === 'message.bot.final' ? final.msg.text : '';
+    const deltaText = deltas.map((d) => (d.kind === 'message.bot.delta' ? d.text : '')).join('');
+    // the final carries exactly what was streamed — the head only
+    expect(deltaText).toBe(finalText);
+    expect(finalText).toContain('the full answer that was on its way');
+    expect(finalText).not.toContain('follow-ups'); // the tail never arrived
+    // the panel-side half of the pair: an activity conclusion, outcome Interrupted
+    const acts = events
+      .filter((e) => e.kind === 'activity')
+      .map((e) => (e.kind === 'activity' ? (e.patch as Record<string, unknown>) : {}))
+      .filter((p) => String(p.activityId).startsWith('reply-'));
+    expect(acts).toHaveLength(1);
+    expect(acts[0]).toMatchObject({ conversationId: 'conv-main', state: 'done', outcome: 'Interrupted' });
+  });
+
+  it('a normal send finalizes UNMARKED and emits no reply activity', async () => {
+    const { adapter, scheduler, events } = makeAdapter('happy');
+    void adapter.connect();
+    scheduler.advance(1000);
+    await adapter.openConversation('kavi', 'conv-main');
+    await adapter.sendMessage('kavi', 'status please', 'm-normal');
+    scheduler.advance(3000);
+    const finals = events.filter((e) => e.kind === 'message.bot.final');
+    expect(finals).toHaveLength(1);
+    const final = finals[0]!;
+    expect(final.kind === 'message.bot.final' && final.msg.interrupted).toBeUndefined();
+    const replyActs = events
+      .filter((e) => e.kind === 'activity')
+      .map((e) => (e.kind === 'activity' ? (e.patch as Record<string, unknown>) : {}))
+      .filter((p) => String(p.activityId).startsWith('reply-'));
+    expect(replyActs).toHaveLength(0);
+  });
+});

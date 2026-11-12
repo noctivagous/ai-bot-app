@@ -118,6 +118,18 @@ export function Board({
 
   return (
     <div>
+      {/* ---- ACTIVITY (D2 umbrella, FEATURE-MAP S6): "Activity" is the
+          client's word for the single list these zones group. The zones
+          underneath are the desk's own grouping invention over that
+          list — kept as-is, and labelled as ours by the subline. ---- */}
+      <section aria-label="Activity">
+        <div className="zone-title mono activity-head" data-testid="activity-umbrella">
+          <b>ACTIVITY</b>
+        </div>
+        <div className="small activity-sub">
+          The desk’s grouping of Muse’s Activity — approvals, running work, and what just finished.
+        </div>
+
       {/* ---- NEEDS YOU ---- */}
       <section className="zone" aria-label="Needs you">
         <div className="zone-title mono">
@@ -297,6 +309,7 @@ export function Board({
             </div>
           </div>
         )}
+      </section>
       </section>
 
       {/* ---- PROJECTS AT A GLANCE + COMING UP ---- */}

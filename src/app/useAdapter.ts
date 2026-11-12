@@ -6,7 +6,14 @@ import { useSyncExternalStore } from 'react';
 import { adapterStore, type AdapterStoreSnapshot } from './adapterStore';
 
 export function useAdapter(): AdapterStoreSnapshot {
-  return useSyncExternalStore(adapterStore.subscribe, adapterStore.getSnapshot);
+  // The store's snapshot is plain environment-independent data (no DOM),
+  // so it doubles as the server snapshot — which also keeps components
+  // renderable under SSR and in render tests.
+  return useSyncExternalStore(
+    adapterStore.subscribe,
+    adapterStore.getSnapshot,
+    adapterStore.getSnapshot,
+  );
 }
 
 export { adapterStore };
