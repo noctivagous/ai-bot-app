@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission Desk for Muse — Introduction</title>
+<style>
+  :root{
+    --bg:#131416; --bg2:#17181b; --panel:#1e2023; --panel2:#232529;
+    --edge:#2e3036; --edge-lit:#3a3d44;
+    --text:#e8e9ea; --dim:#a7abb3; --faint:#7c8087;
+    --amber:#f0b23e; --amber-dim:#8a6a24; --green:#7fc96a; --red:#e06c5a;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,var(--bg2),var(--bg) 240px);color:var(--text);
+       font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+       height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  a{color:var(--amber);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.86em;background:#101112;border:1px solid var(--edge);
+       border-radius:4px;padding:.08em .38em;color:#f3d9a4}
+  .wrap{max-width:1060px;width:100%;margin:0 auto;padding:0 20px 16px;flex:1;min-height:0;
+        display:flex;flex-direction:column;position:relative}
+
+  /* ---------- header ---------- */
+  header{padding:24px 0 2px;flex:none}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--amber);
+          text-transform:uppercase;margin:0 0 10px}
+  h1{font-size:30px;line-height:1.15;margin:0 0 8px;font-weight:650;letter-spacing:-.01em}
+  h1 .thin{color:var(--dim);font-weight:400}
+  .lede{color:var(--dim);font-size:16.5px;max-width:720px;margin:0 0 18px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+  .chip{font-family:var(--mono);font-size:11.5px;padding:5px 10px;border-radius:999px;
+        background:linear-gradient(180deg,#2b2d33,#22242a);border:1px solid var(--edge-lit);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 2px rgba(0,0,0,.5);color:var(--dim)}
+  .chip b{color:var(--green);font-weight:600}
+  .chip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
+             margin-right:6px;box-shadow:0 0 6px var(--green)}
+
+  /* ---------- nav (SPA tabs) ---------- */
+  nav{flex:none;z-index:20;margin:16px 0;padding:8px;
+      background:linear-gradient(180deg,#26282d,#1d1f23);border:1px solid var(--edge);
+      border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 4px 14px rgba(0,0,0,.45);
+      display:flex;flex-wrap:wrap;gap:6px}
+  nav button{appearance:none;border:1px solid transparent;background:transparent;color:var(--dim);
+      font:inherit;font-size:13.5px;font-weight:550;padding:8px 14px;border-radius:7px;cursor:pointer}
+  nav button:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  nav button.on{color:#141310;background:linear-gradient(180deg,#ffc95e,var(--amber));
+      border-color:var(--amber-dim);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.5);font-weight:650}
+
+  /* ---------- panels & type ---------- */
+  section{display:none}
+  section.on{display:block;animation:fade .18s ease;flex:1 1 auto;min-height:0;overflow-y:auto;
+      overflow-x:hidden;padding:2px 14px 26px 2px;scrollbar-width:none}
+  /* The native bar is hidden entirely; #vbar (below) is a drawn element driven
+     by the section's scroll position, so it is visible whenever the section
+     overflows — on every platform, no overlay auto-hiding. */
+  section::-webkit-scrollbar{display:none;width:0;height:0}
+  section:focus{outline:none}
+  #vbar{position:absolute;right:5px;width:12px;border-radius:7px;z-index:30;display:none;
+      background:rgba(255,255,255,.04);box-shadow:inset 0 1px 4px rgba(0,0,0,.55);cursor:pointer}
+  #vbar.show{display:block}
+  #vthumb{position:absolute;left:1px;width:10px;border-radius:6px;cursor:grab;
+      background:linear-gradient(180deg,#454954,#2f3239);border:1px solid #4d515c;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 3px rgba(0,0,0,.5)}
+  #vthumb:hover{background:linear-gradient(180deg,#515663,#383b43)}
+  #vbar.dragging #vthumb,#vthumb:active{cursor:grabbing;
+      background:linear-gradient(180deg,#ffc95e,var(--amber));border-color:var(--amber-dim)}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--edge);
+      border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 10px rgba(0,0,0,.4);
+      padding:22px 24px;margin:0 0 18px}
+  h2{font-size:21px;margin:2px 0 12px;font-weight:640;letter-spacing:-.01em}
+  h3{font-size:15.5px;margin:20px 0 8px;font-weight:620}
+  h3:first-child{margin-top:0}
+  p{margin:0 0 12px;color:#d6d8db}
+  p.dim,li.dim{color:var(--dim)}
+  ul,ol{margin:0 0 12px;padding-left:22px;color:#d6d8db}
+  li{margin:4px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:0 0 18px}
+  .card{background:linear-gradient(180deg,#26282d,#202226);border:1px solid var(--edge);border-radius:10px;
+        padding:16px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  .card h4{margin:0 0 6px;font-size:14px;color:var(--amber);font-weight:620}
+  .card p{font-size:13.5px;color:var(--dim);margin:0}
+
+  /* topology diagram */
+  .topo{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;margin:6px 0 4px}
+  .node{flex:1 1 200px;background:#191a1d;border:1px solid var(--edge-lit);border-radius:10px;padding:14px 16px;
+        box-shadow:inset 0 2px 8px rgba(0,0,0,.55)}
+  .node .t{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+  .node .n{font-weight:640;margin:4px 0 4px;font-size:15px}
+  .node p{font-size:13px;color:var(--dim);margin:0}
+  .arrow{align-self:center;color:var(--amber);font-family:var(--mono);font-size:13px;white-space:nowrap}
+
+  /* command blocks */
+  .cmd{position:relative;background:#0e0f10;border:1px solid var(--edge);border-radius:9px;
+       box-shadow:inset 0 2px 10px rgba(0,0,0,.7);padding:13px 44px 13px 16px;margin:0 0 14px;overflow-x:auto}
+  .cmd::-webkit-scrollbar{height:10px}
+  .cmd::-webkit-scrollbar-thumb{background:#33363d;border-radius:6px;border:2px solid #0e0f10}
+  .cmd::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+  .cmd pre{margin:0;font-family:var(--mono);font-size:13px;line-height:1.6;color:#f0e3c0;white-space:pre}
+  .cmd button{position:absolute;top:8px;right:8px;appearance:none;cursor:pointer;
+      background:linear-gradient(180deg,#2e3036,#232529);color:var(--dim);border:1px solid var(--edge-lit);
+      border-radius:6px;font-family:var(--mono);font-size:11px;padding:4px 9px}
+  .cmd button:hover{color:var(--text)}
+  .cmd button.ok{color:var(--green);border-color:#3f5a34}
+
+  /* steps + checklist */
+  .step{display:flex;gap:14px;margin:0 0 18px}
+  .num{flex:0 0 30px;height:30px;border-radius:50%;text-align:center;line-height:30px;font-weight:700;font-size:14px;
+       color:#171408;background:linear-gradient(180deg,#ffc95e,var(--amber));border:1px solid var(--amber-dim);
+       box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 1px 3px rgba(0,0,0,.5)}
+  .step .body{flex:1;min-width:0}
+  .step h3{margin:3px 0 6px}
+  label.tick{display:flex;gap:9px;align-items:flex-start;cursor:pointer;color:var(--dim);font-size:13.5px;margin-top:6px}
+  label.tick input{margin-top:3px;accent-color:var(--amber)}
+
+  /* checks explorer */
+  .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:0 0 14px}
+  .checks button{appearance:none;cursor:pointer;text-align:left;font:inherit;font-size:13px;color:var(--dim);
+      background:linear-gradient(180deg,#26282d,#1f2126);border:1px solid var(--edge);border-radius:8px;padding:9px 12px}
+  .checks button:hover{color:var(--text)}
+  .checks button.on{color:var(--amber);border-color:var(--amber-dim)}
+  .checks button .req{float:right;font-family:var(--mono);font-size:10px;color:var(--faint)}
+  #checkDetail{border-left:3px solid var(--amber);background:#191a1d;border-radius:0 9px 9px 0;
+       padding:14px 18px;box-shadow:inset 0 1px 6px rgba(0,0,0,.5)}
+  #checkDetail h4{margin:0 0 6px;font-size:14.5px}
+  #checkDetail p{font-size:13.5px;color:var(--dim);margin:0 0 8px}
+  #checkDetail p:last-child{margin:0}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:0 0 8px;table-layout:fixed}
+  td{word-break:break-word}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--edge);vertical-align:top}
+  th{color:var(--faint);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+  td{color:#d6d8db} td.dim{color:var(--dim)}
+  .warn{border-left:3px solid var(--red);background:#1d1a1a;border-radius:0 9px 9px 0;padding:12px 16px;margin:0 0 14px}
+  .warn p{margin:0;font-size:13.5px;color:#e3cfcb}
+  .note{border-left:3px solid var(--amber);background:#1d1b16;border-radius:0 9px 9px 0;padding:12px 16px;margin:0 0 14px}
+  .note p{margin:0;font-size:13.5px;color:#e6dcc4}
+  footer{color:var(--faint);font-size:12.5px;flex:none;margin-top:12px;border-top:1px solid var(--edge);padding-top:12px}
+  footer code{font-size:11px}
+  @media (max-width:640px){ h1{font-size:27px} .arrow{display:none} nav{top:6px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="kicker">ai-bot-app · Muse AI Mode</p>
+  <h1>Mission Desk <span class="thin">for Muse</span></h1>
+  <p class="lede">The desk for serious Muse work. If you run Muse across several
+  projects at once — code, a book, a research programme — Mission Desk lets you conduct
+  all of it from one board: what's running, what needs you, what's next, with every
+  conversation kept under its project and filed your way. This page is the whole
+  manual: who it's for, how to install it, and how to run it.</p>
+  <div class="chips">
+    <span class="chip"><span class="dot"></span><b>Ready 11/11</b>&nbsp;against the real muse.ai</span>
+    <span class="chip">Local-first · runs on your machine</span>
+    <span class="chip">No account, no cloud, no telemetry</span>
+  </div>
+</header>
+
+<nav id="tabs" role="tablist">
+  <button data-tab="overview" class="on">Overview</button>
+  <button data-tab="install">Install</button>
+  <button data-tab="using">Using it</button>
+  <button data-tab="checks">The 11 checks</button>
+  <button data-tab="trouble">Troubleshooting</button>
+  <button data-tab="rules">Ground rules</button>
+</nav>
+
+<!-- ============ OVERVIEW ============ -->
+<section id="overview" class="on">
+  <div class="panel">
+    <h2>Made for people who run Muse like a studio</h2>
+    <p>You hand Muse real projects, and you run them in parallel. At any given moment
+    a few of your chats are mid-task, one is waiting on a decision from you, and one
+    finished an hour ago while you were looking elsewhere. Mission Desk is where you
+    conduct that: a board that shows the whole studio at a glance, and a filing system
+    that works the way you think — by project.</p>
+    <p>It works <i>with</i> the agent, not instead of it. Everything Muse is good at
+    stays in Muse — its memory, its search, its scheduling, its connectors, the
+    artifacts it builds — and Mission Desk brings all of it into one view. What the
+    desk adds is the layer that's about <b>you</b>: your projects and their statuses,
+    your filing, your call on every proposal. You file, tag, rename, pin and set
+    status yourself, by direct manipulation; when the agent suggests a filing or a
+    better title, it arrives as a proposal you accept or reject. The organisation is
+    yours — the agent works within it.</p>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h4>The multi-project builder</h4><p>Several codebases on the go
+      at once, each with its own chats, branches and review queue. You want every
+      project's state — including what's built and waiting on your word to push —
+      visible without opening five threads to check.</p></div>
+    <div class="card"><h4>The long-haul maker</h4><p>A book, a course, a research
+      programme — work measured in chapters and months, not messages. You want the
+      project to hold its shape: drafts as artifacts, sessions as tasks, the plan
+      where you can see it.</p></div>
+    <div class="card"><h4>The parallel operator</h4><p>Three chats running is a normal
+      afternoon. You switch between them, steer the one that's stuck, and want a
+      finished job to announce itself — a badge, an entry in Needs You — instead of
+      being something you discover by polling every thread.</p></div>
+  </div>
+
+  <div class="panel">
+    <h2>How the pieces fit</h2>
+    <p class="dim">Three parts, all on your machine. The app never touches the muse.ai
+    page directly — two browser tabs can't talk across origins, so a small local
+    bridge relays between them, and a browser extension is the app's eyes and hands
+    inside the tab you already have open.</p>
+    <div class="topo">
+      <div class="node"><div class="t">Your browser · Tab 1</div><div class="n">muse.ai</div>
+        <p>You open it and sign in, as always. Our extension's content script rides
+        inside it — observing and operating the page, drawing nothing on it.</p></div>
+      <div class="arrow">── relay ──▶</div>
+      <div class="node"><div class="t">Local process</div><div class="n">Bridge :7701</div>
+        <p>A small Node program on 127.0.0.1. Relays messages between the extension and
+        the app, tracks whether the Muse tab is really there, and hosts the app's records.</p></div>
+      <div class="arrow">── relay ──▶</div>
+      <div class="node"><div class="t">Your browser · Tab 2</div><div class="n">Mission Desk</div>
+        <p>The app itself, served from your machine at localhost:4173. Board, conversations,
+        schedule, artifacts — the organisation layer.</p></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h4>The Board</h4><p>Needs You, Running Now, Projects at a
+      Glance, Coming Up, Recently Finished — work in flight across every project,
+      at a glance, with finishing treated as an event, not something you discover
+      by polling chats.</p></div>
+    <div class="card"><h4>Conversations as records</h4><p>Each chat is a database row:
+      project, tags, status, your own title. Unfiled chats wait in an Inbox tray
+      for triage instead of scrolling away.</p></div>
+    <div class="card"><h4>Approvals with scope</h4><p>When Muse asks permission, the
+      request lands in Needs You with its scope — once, or always. Your decision is
+      carried back and the real control in the page is clicked. Nothing is forged.</p></div>
+    <div class="card"><h4>Chat that drives dashboards</h4><p>The agent can propose
+      schedule entries and open artifacts from inside a chat. Proposals wait for
+      your Accept — the chat suggests, you file.</p></div>
+  </div>
+
+  <div class="panel">
+    <h2>Just want to look?</h2>
+    <p>The app runs against a simulated adapter with zero setup — the full Mission Desk
+    experience, with a mock agent behind it. From the repo root:</p>
+    <div class="cmd"><pre>npm install
+npm run dev</pre><button data-copy>copy</button></div>
+    <p class="dim">Open the local address it prints. Everything on the board works;
+    only the agent is simulated. The rest of this guide is about connecting the
+    real one.</p>
+  </div>
+</section>
+
+<!-- ============ INSTALL ============ -->
+<section id="install">
+  <div class="panel">
+    <h2>Before you start</h2>
+    <ul>
+      <li><b>Node 20+</b> and <b>Chrome</b> (or Chromium) with the ability to enable Developer mode for extensions.</li>
+      <li>A <b>muse.ai account</b> you can sign in to — you sign in yourself, in your own browser. Nothing in this stack ever sees your password.</li>
+      <li>The repo cloned locally: <code>git clone https://github.com/noctivagous/ai-bot-app.git</code></li>
+    </ul>
+    <p class="dim">Tick the steps off as you go — the ticks are remembered on this machine.</p>
+  </div>
+
+  <div class="panel">
+    <div class="step"><div class="num">1</div><div class="body">
+      <h3>Install dependencies</h3>
+      <div class="cmd"><pre>cd ai-bot-app
+npm install
+cd bridge &amp;&amp; npm install &amp;&amp; cd ..</pre><button data-copy>copy</button></div>
+      <label class="tick"><input type="checkbox" data-tick="i1"> Done</label>
+    </div></div>
+
+    <div class="step"><div class="num">2</div><div class="body">
+      <h3>Start the bridge</h3>
+      <div class="cmd"><pre>cd bridge &amp;&amp; npm start</pre><button data-copy>copy</button></div>
+      <p>Leave it running. On first run it creates its pairing token at
+      <code>bridge/.pairing.json</code> — it prints the path, never the token.
+      You'll need that file in step 4.</p>
+      <label class="tick"><input type="checkbox" data-tick="i2"> Bridge is running</label>
+    </div></div>
+
+    <div class="step"><div class="num">3</div><div class="body">
+      <h3>Load the extension</h3>
+      <p>Open <code>chrome://extensions</code>, turn on <b>Developer mode</b> (top right),
+      click <b>Load unpacked</b>, and select the repo's <code>extension/</code> folder.</p>
+      <label class="tick"><input type="checkbox" data-tick="i3"> Extension is loaded</label>
+    </div></div>
+
+    <div class="step"><div class="num">4</div><div class="body">
+      <h3>Pair the extension with the bridge</h3>
+      <p>Click the extension's toolbar icon and paste the token from
+      <code>bridge/.pairing.json</code>. The popup should say <b>“Bridge: connected”</b>.
+      The token lives only in that file and in the extension's own storage — never
+      in the page, never in the repo.</p>
+      <label class="tick"><input type="checkbox" data-tick="i4"> Popup says connected</label>
+    </div></div>
+
+    <div class="step"><div class="num">5</div><div class="body">
+      <h3>Open muse.ai</h3>
+      <p>Open <a href="https://muse.ai" target="_blank" rel="noopener">muse.ai</a> in a tab
+      and sign in normally. The tab registers itself with the extension automatically —
+      there's nothing to click in the page.</p>
+      <label class="tick"><input type="checkbox" data-tick="i5"> Signed in, tab open</label>
+    </div></div>
+
+    <div class="step"><div class="num">6</div><div class="body">
+      <h3>Run the app</h3>
+      <div class="cmd"><pre>npm run build &amp;&amp; npx vite preview</pre><button data-copy>copy</button></div>
+      <p>Open <code>http://localhost:4173/?adapter=muse</code>. The status lamp (top right)
+      should walk <i>connecting → ready</i>, and the connection popover should show
+      <b>11/11 checks</b> with your agent's name as the identity.</p>
+      <label class="tick"><input type="checkbox" data-tick="i6"> Ready, 11/11</label>
+    </div></div>
+  </div>
+
+  <div class="note"><p><b>That's the whole install.</b> From here you use the app in
+  Tab 2 and keep the muse.ai tab open beside it. If step 6 doesn't reach 11/11,
+  the failing check is the diagnosis — see <a href="#checks" data-goto="checks">The 11 checks</a>.</p></div>
+</section>
+
+<!-- ============ USING ============ -->
+<section id="using">
+  <div class="panel">
+    <h2>The Board is home</h2>
+    <p>Mission Desk is board-first; chat is a focus panel that slides over the board
+    when you open a conversation, and slides away when you're done. The board answers
+    three questions without opening a single chat:</p>
+    <ul>
+      <li><b>Needs You</b> — approvals waiting (with their once/always scope) and work that finished while you weren't looking.</li>
+      <li><b>Running Now</b> — live job cards for conversations doing work right now; expand one to see what it's doing in detail.</li>
+      <li><b>Projects at a Glance + Coming Up</b> — every project's state (with
+      <i>n running · m waiting on you</i> rollups) and the schedule ahead. Finished work collects in <b>Recently Finished</b>.</li>
+    </ul>
+    <p>You can run several chats at once — sending in one never blocks the others, and
+    a chat finishing is an event: a badge, a Needs You entry, a toast. Not a surprise
+    you find later.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Conversations, filed by you</h2>
+    <p>The Conversations view is an editable table, not a scrollback. Inline-rename a
+    chat (the title is yours — the agent may <i>propose</i> a better one, with Accept /
+    Reject), pick its project from the row, add tags, set its status. New chats land
+    in the <b>Inbox</b> tray until you file them. Projects carry a status
+    (<code>active · awaiting-owner · blocked · parked · done</code>) and a kind
+    (software, book, research, general) — software projects also show repo state,
+    including what's awaiting a push.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Day-to-day moves</h2>
+    <table>
+      <tr><th style="width:210px">You want to…</th><th>Do this</th></tr>
+      <tr><td>Send work to the agent</td><td class="dim">Open the conversation, type in the slide-over composer, send. The extension types it into the real muse.ai composer and confirms by watching your message land — an unconfirmed send is reported as failed, never as sent.</td></tr>
+      <tr><td>Approve something</td><td class="dim">Needs You → Allow once / Always allow / Deny. The decision is carried back and the page's real control is clicked; the decision log records the scope you chose.</td></tr>
+      <tr><td>Accept a schedule proposal</td><td class="dim">When a chat proposes a session, it appears under <b>Proposed by chat</b> on the Schedule view. Accept files it; Reject discards it. Nothing is ever auto-filed.</td></tr>
+      <tr><td>Run a dashboard action</td><td class="dim">The Control Panel (on the Board) holds action buttons — forms and commands the chat can also drive. With the Muse adapter, an action is sent as a structured chat message through the same confirmed send path.</td></tr>
+      <tr><td>Find an artifact</td><td class="dim">The Artifacts view lists what the agent produced with its provenance — bot · chat · project · goal — and opens it in a viewer.</td></tr>
+      <tr><td>Connect a resource</td><td class="dim">Global resources (monitor modules, email accounts, databases) live in the Control Panel's registry. Toggle which bot each connects to; the toggles persist. Data flows for monitors are a later slice — the registry says so up front.</td></tr>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Closing the Muse tab</h2>
+    <p>The app knows whether the tab is really there. The extension heartbeats to the
+    bridge every couple of seconds; close the tab (or navigate it away) and the app
+    drops out of <i>ready</i> within moments: the tab-dependent checks fail with
+    <i>“Muse tab closed or not responding — reopen muse.ai”</i>, the composer refuses
+    to send, and — importantly — <b>your draft is kept</b>. Reopen muse.ai and the app
+    returns to ready on its own. No reconnect ritual.</p>
+  </div>
+</section>
+
+<!-- ============ CHECKS ============ -->
+<section id="checks">
+  <div class="panel">
+    <h2>Eleven checks, one derived status</h2>
+    <p>The connection popover (click the lamp, top right) shows a checklist. The overall
+    phase — connecting, ready, degraded, error — is <i>derived</i> from these checks and
+    nothing else, so the status can never claim more than the evidence. Eight checks are
+    required for ready; three are optional capabilities. Click one:</p>
+    <div class="checks" id="checkBtns"></div>
+    <div id="checkDetail"></div>
+  </div>
+  <div class="note"><p><b>Reading a failure:</b> a red check names the exact thing that
+  wasn't found — that name is the diagnosis and, on the real page, usually the one
+  selector to tune. See Troubleshooting.</p></div>
+</section>
+
+<!-- ============ TROUBLESHOOTING ============ -->
+<section id="trouble">
+  <div class="panel">
+    <h2>When something's off</h2>
+    <table>
+      <tr><th style="width:250px">Symptom</th><th>Likely cause &amp; fix</th></tr>
+      <tr><td>A check fails on the real page (composer, message list, signed-in…)</td>
+        <td class="dim">muse.ai changed its page structure; one selector needs tuning. Edit only <code>extension/selectors.js</code> — every lookup lives there, role/text/structural only, never generated class names — then <b>reinstall</b> the extension unpacked and reload the muse.ai tab. (A bare reload isn't always enough: some loaders snapshot the extension folder at install time.)</td></tr>
+      <tr><td>Stuck part-way: bridge + extension pass, tab never registers</td>
+        <td class="dim">Ask the background worker for its state with an <code>md-state</code> message — it reports bridge connection and tab registration separately, which tells a bridge outage apart from a missed registration. A missed registration is fixed by reloading the muse.ai tab so the content script re-registers.</td></tr>
+      <tr><td>App says the tab is gone, but it's open</td>
+        <td class="dim">Heartbeats were delayed — a suspended background worker, or a hidden tab whose timers Chrome throttled. Any message from the tab revives presence; reload the tab or the extension. If it flaps repeatedly on a hidden tab, that's the known throttling behaviour, not data loss.</td></tr>
+      <tr><td>Sends fail with “not ready”</td>
+        <td class="dim">The app only sends from <i>ready</i>. Check the popover: the red check says why (usually the tab, or sign-in). Your draft is preserved either way — fix the cause and send again.</td></tr>
+      <tr><td>“Signed in” check fails while you ARE signed in</td>
+        <td class="dim">The signed-in marker selectors need the same tuning treatment as any other check — see the first row.</td></tr>
+      <tr><td>Port 4173 behaves strangely</td>
+        <td class="dim">A stale preview server from an earlier session may be squatting on the port. Kill it and restart the preview with <code>npx vite preview --port 4173 --strictPort</code> so it fails loudly instead of drifting to another port.</td></tr>
+      <tr><td>Approvals behave unverified</td>
+        <td class="dim">Where this stands: the approval path is fully proven against the test fixture, and its selectors were fitted by construction, but at the time of writing no genuine approval request had yet occurred during a real-page session to exercise it end-to-end. The first real one is the test — if Needs You and the page disagree, trust the page and report the check state.</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <h2>What “verified” means here</h2>
+    <p>The whole fuse — extension, bridge, app — is driven end-to-end by automated
+    probes against a local fixture page that mimics muse.ai's mechanics faithfully
+    (its composer even rejects naive programmatic typing, the way the real one does).
+    On top of that, the extension was <b>calibrated against the real muse.ai</b>:
+    selectors fitted to the real DOM, sends confirmed by observation, replies
+    streamed and settled to exactly one final each, tab-close detection proven.
+    The calibration survey and report live in the repo at
+    <code>docs/survey/muse-ai-dom-survey.md</code> and <code>docs/CALIBRATION-REPORT.md</code>.</p>
+  </div>
+</section>
+
+<!-- ============ RULES ============ -->
+<section id="rules">
+  <div class="panel">
+    <h2>The ground rules the stack is built on</h2>
+    <ul>
+      <li><b>Your session stays yours.</b> The extension never reads cookies, tokens, passwords, or any credential. It observes and operates page DOM in a tab <i>you</i> opened and signed into. If anything ever seems to require your session material, the correct behaviour is to stop — that's a design rule, not a limitation.</li>
+      <li><b>Everything is local.</b> The bridge binds 127.0.0.1 only. The pairing token exists only in <code>bridge/.pairing.json</code> and the extension's storage. Records live on your machine, hosted by the bridge.</li>
+      <li><b>Brittle, and plain about it.</b> This fuse is unsupported by design — muse.ai can change under it. When it does, a named check fails and tells you what wasn't found, instead of the app quietly misbehaving. A status is only ever as good as its freshest evidence: checks go stale, presence times out, and the app says so.</li>
+      <li><b>Manual-first, always.</b> The agent proposes; you dispose. Filings, retitles, status changes and schedule entries from the chat are proposals until you accept them.</li>
+      <li><b>Activity is transient.</b> Live activity mirrors onto the board and is never written into records. What's a record is decisions and organisation — what's a stream stays a stream.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Where to read more</h2>
+    <ul>
+      <li><code>README.md</code> — the short version of all of this, in the repo root.</li>
+      <li><code>extension/README.md</code> — the extension's own setup and troubleshooting notes.</li>
+      <li><code>DESIGN.md</code> — the full design: the adapter contract (§5), the status model (§6, presence in §6.6), the fuse (§9), and every decision and its reasons.</li>
+      <li><code>docs/muse-code-calibration-brief.md</code> — how the real-page calibration was assigned and audited.</li>
+      <li><code>reference/</code> — the original design seed this repo grew from.</li>
+    </ul>
+  </div>
+</section>
+
+<div id="vbar" aria-hidden="true"><div id="vthumb"></div></div>
+
+<footer>
+  Mission Desk for Muse · ai-bot-app · This file is self-contained — it works opened
+  straight from disk, no server, no network. Keep it next to the repo; it describes
+  the build on <code>main</code>.
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  /* ---------- SPA tabs with hash routing ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll("#tabs button"));
+  var sections = {};
+  tabs.forEach(function(b){ sections[b.getAttribute("data-tab")] = document.getElementById(b.getAttribute("data-tab")); });
+  function show(id){
+    if(!sections[id]) id = "overview";
+    tabs.forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-tab")===id); });
+    Object.keys(sections).forEach(function(k){ sections[k].classList.toggle("on", k===id); });
+    if(location.hash !== "#"+id){ history.replaceState(null,"","#"+id); }
+    sections[id].scrollTop = 0;
+  }
+  tabs.forEach(function(b){ b.addEventListener("click", function(){ show(b.getAttribute("data-tab")); }); });
+  document.querySelectorAll("[data-goto]").forEach(function(a){
+    a.addEventListener("click", function(e){ e.preventDefault(); show(a.getAttribute("data-goto")); });
+  });
+  window.addEventListener("hashchange", function(){ show(location.hash.slice(1)); });
+  show(location.hash ? location.hash.slice(1) : "overview");
+
+  /* ---------- custom scrollbar: a drawn bar driven by scroll position ---------- */
+  var vbar = document.getElementById("vbar");
+  var vthumb = document.getElementById("vthumb");
+  var wrapEl = document.querySelector(".wrap");
+  function activeSection(){ return document.querySelector("section.on"); }
+  function vMetrics(){
+    var s = activeSection(); if(!s) return null;
+    var range = s.scrollHeight - s.clientHeight;
+    return { s:s, range:range, over: range > 1 };
+  }
+  function vThumbTop(){
+    var m = vMetrics(); if(!m || !m.over) return 0;
+    var trackH = vbar.clientHeight, thumbH = vthumb.offsetHeight;
+    return (m.s.scrollTop / m.range) * (trackH - thumbH);
+  }
+  function vLayout(){
+    var m = vMetrics(); if(!m){ vbar.classList.remove("show"); return; }
+    var wr = wrapEl.getBoundingClientRect(), sr = m.s.getBoundingClientRect();
+    vbar.style.top = (sr.top - wr.top) + "px";
+    vbar.style.height = sr.height + "px";
+    if(!m.over){ vbar.classList.remove("show"); return; }
+    vbar.classList.add("show");
+    var thumbH = Math.max(28, m.s.clientHeight / m.s.scrollHeight * sr.height);
+    vthumb.style.height = thumbH + "px";
+    vthumb.style.transform = "translateY(" + vThumbTop() + "px)";
+  }
+  function vScrollSync(){
+    if(!vbar.classList.contains("show")) { vLayout(); return; }
+    vthumb.style.transform = "translateY(" + vThumbTop() + "px)";
+  }
+  Object.keys(sections).forEach(function(k){
+    sections[k].addEventListener("scroll", vScrollSync, { passive:true });
+    sections[k].setAttribute("tabindex", "0");
+    new MutationObserver(function(){ requestAnimationFrame(vLayout); })
+      .observe(sections[k], { attributes:true, attributeFilter:["class"] });
+    sections[k].addEventListener("animationend", vLayout);
+    new ResizeObserver(function(){ vLayout(); }).observe(sections[k]);
+  });
+  window.addEventListener("resize", vLayout);
+  requestAnimationFrame(vLayout);
+
+  /* drag the thumb; click the track to jump */
+  (function(){
+    var drag = null;
+    vthumb.addEventListener("pointerdown", function(e){
+      var m = vMetrics(); if(!m) return;
+      drag = { y: e.clientY, top: m.s.scrollTop };
+      vbar.classList.add("dragging");
+      vthumb.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    vthumb.addEventListener("pointermove", function(e){
+      if(!drag) return;
+      var m = vMetrics(); if(!m) return;
+      var trackRange = vbar.clientHeight - vthumb.offsetHeight;
+      if(trackRange <= 0) return;
+      m.s.scrollTop = drag.top + (e.clientY - drag.y) / trackRange * m.range;
+    });
+    function endDrag(){ drag = null; vbar.classList.remove("dragging"); }
+    vthumb.addEventListener("pointerup", endDrag);
+    vthumb.addEventListener("pointercancel", endDrag);
+    vbar.addEventListener("pointerdown", function(e){
+      if(e.target === vthumb) return;
+      var m = vMetrics(); if(!m) return;
+      var r = vbar.getBoundingClientRect();
+      var ratio = (e.clientY - r.top - vthumb.offsetHeight / 2) / (r.height - vthumb.offsetHeight);
+      ratio = Math.max(0, Math.min(1, ratio));
+      m.s.scrollTop = ratio * m.range;
+    });
+    vbar.addEventListener("wheel", function(e){
+      var m = vMetrics(); if(!m) return;
+      e.preventDefault();
+      m.s.scrollTop += e.deltaY;
+    }, { passive:false });
+  })();
+
+  /* ---------- copy buttons ---------- */
+  document.querySelectorAll("[data-copy]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var pre = btn.parentElement.querySelector("pre");
+      var text = pre ? pre.textContent : "";
+      function done(){ btn.textContent = "copied"; btn.classList.add("ok");
+        setTimeout(function(){ btn.textContent = "copy"; btn.classList.remove("ok"); }, 1400); }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, function(){ fallback(); });
+      } else fallback();
+      function fallback(){
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  /* ---------- install checklist persistence ---------- */
+  var KEY = "md-intro-ticks";
+  var store = {};
+  try { store = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){}
+  document.querySelectorAll("[data-tick]").forEach(function(box){
+    var id = box.getAttribute("data-tick");
+    box.checked = !!store[id];
+    box.addEventListener("change", function(){
+      store[id] = box.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){}
+    });
+  });
+
+  /* ---------- the 11 checks explorer ---------- */
+  var CHECKS = [
+    {id:"bridge", label:"Bridge reachable", req:true,
+     what:"The app can reach the bridge process on 127.0.0.1:7701 and its status channel is live.",
+     fix:"Start the bridge: cd bridge && npm start. If it was running, check nothing else took the port."},
+    {id:"extension", label:"Extension connected", req:true,
+     what:"The extension's background worker is paired and connected to the bridge over its WebSocket.",
+     fix:"Load the extension unpacked, open its popup, and confirm the pairing token from bridge/.pairing.json is entered and it says “Bridge: connected”."},
+    {id:"tab", label:"Muse tab found", req:true,
+     what:"A muse.ai tab is registered with the extension — and freshly present: it heartbeats every ~2 s, and 6 s of silence (or an explicit tab-closed signal) fails this check.",
+     fix:"Open muse.ai in a tab. If one is open but this still fails, reload that tab so the content script re-registers."},
+    {id:"page", label:"Muse page ready", req:true,
+     what:"The content script is running in the tab and the page's app shell was found.",
+     fix:"Reload the muse.ai tab. On the real page this depends on the app-root selector in extension/selectors.js."},
+    {id:"auth", label:"Signed in", req:true,
+     what:"The page shows the signed-in identity (your agent's name) rather than a sign-in screen.",
+     fix:"Sign in to muse.ai in that tab — personally; nothing in this stack can or should do it for you."},
+    {id:"composer", label:"Composer found", req:true,
+     what:"The chat input was located, so the app can send through the page's own composer.",
+     fix:"A classic selector-tuning case: on the real page the composer is the textarea labelled “Message”. Tune extension/selectors.js, reinstall the extension, reload the tab."},
+    {id:"messageList", label:"Message list found", req:true,
+     what:"The conversation's message list was located, so replies can be observed and streamed.",
+     fix:"Selector tuning in extension/selectors.js (the message container), then reinstall + reload."},
+    {id:"observer", label:"Reply observer armed", req:true,
+     what:"The DOM observer that turns page mutations into streamed deltas — and settles each reply into exactly one final — is running.",
+     fix:"Usually recovers with the tab; if it alone is red while the list is found, reload the tab and the extension."},
+    {id:"approvals", label:"Approval observer", req:false,
+     what:"Optional. The observer that spots permission requests in the page and mirrors them into Needs You.",
+     fix:"Optional capability: the app still works without it, approvals just stay in the page. Its selectors are the least exercised — see Troubleshooting."},
+    {id:"activity", label:"Activity observer", req:false,
+     what:"Optional. Watches the client's Activity view — the source of record for the agent's background work — and mirrors it to Running Now / Recently Finished.",
+     fix:"Open the Activity view in the muse.ai tab once so the panel exists in the DOM, then re-check."},
+    {id:"activityPanel", label:"Activity panel observer", req:false,
+     what:"Optional. The panel-level observer for Activity entries and their detail, so board cards can expand to show what a job is doing.",
+     fix:"Same as the Activity observer; entry-level mapping on the real page is deliberately conservative where the panel gives entries no stable ids."}
+  ];
+  var btnWrap = document.getElementById("checkBtns");
+  var detail = document.getElementById("checkDetail");
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+  CHECKS.forEach(function(c, i){
+    var b = document.createElement("button");
+    b.innerHTML = esc(c.label) + '<span class="req">' + (c.req ? "required" : "optional") + "</span>";
+    b.addEventListener("click", function(){
+      btnWrap.querySelectorAll("button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      detail.innerHTML = "<h4>" + esc(c.label) + " <code>" + esc(c.id) + "</code></h4>" +
+        "<p>" + esc(c.what) + "</p><p><b>If it's red:</b> " + esc(c.fix) + "</p>";
+    });
+    btnWrap.appendChild(b);
+    if(i===0) b.click();
+  });
+})();
+</script>
+</body>
+</html>
