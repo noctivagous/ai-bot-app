@@ -117,3 +117,36 @@ recency-first order and the search box in the table defaults; the
 client row menu (Pin/Rename/Archive/Delete) vs ours
 (Open/Pin/Archive) suggests adding Rename behind a confirm and NOT
 mirroring Delete.
+
+## S3 — Chat & message presentation (fresh test chat, my content)
+
+Date separator is a centered time-only pill ("6:16 AM"; older
+formats unobserved). User messages: right-aligned pale-teal pills,
+no visible name (the "You:" prefix is DOM-only; the agent name leaf
+appears nowhere in the log — "Kavi" lives only in the panel
+header). Per-message and per-group naming both absent from the
+rendered log. Each user message carries More options / Copy
+response / Reply. Assistant messages: short replies are small grey
+chips, longer ones light-grey rounded cards; multi-part replies
+stay in one card. Actions: React / Reply / More options. Code
+block: language label, Download file + Copy Code icon buttons,
+syntax highlighting. No timestamps anywhere; hover surfaces no
+tooltip. Consecutive same-role grouping unobserved (structure
+exists via data-message-grouped-with-next/previous). Distinction
+is placement + container, not color or names.
+
+Desk implication: map S3 mirror stands with one correction — the
+client has NO per-message timestamps at all, so mirroring means
+dropping ours, not demoting to hover. Show the "Kavi" name leaf on
+groups, group consecutive messages, centered-pill separators,
+placement + name distinction.
+
+## S4 — Composer (same test chat)
+
+Empty: placeholder "Message" + Attach file + Dictate a message
+(+ mic affordance in some layouts), no Send. Non-empty: Send
+appears, nothing else joins. Enter sends (verified twice).
+Shift+Enter untested (recorded, not risked). The client already
+materialises Send on text — parity input for owner decision D1.
+
+Desk implication: mirror the materialising Send (D1).
