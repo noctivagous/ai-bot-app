@@ -231,22 +231,28 @@ phases only, no others seen. Example test row, verbatim (my
 content): "Explain send button states / Explained empty, typing,
 sending, sent, and error states / 6:19 am" — titles are
 agent-summarised task names, details auto past-tense summaries.
+Client inconsistency recorded: dialog conflates Interrupted with
+Error while rows keep them distinct — desk keeps "Interrupted"
+throughout (deliberate difference, owner settles in map).
 
-## S5 — Working signals (same test chat, mid-stream screenshots)
+## S7 — Approvals
 
-While generating: panel header shows "Kavi" + "is responding"
-(list icon) replacing "Connected"; avatar switches to a headset
-variant; composer Send becomes a dark square Stop button; reply
-text streams progressively into the card (caught mid-sentence).
-A new panel entry appears immediately with a clover/progress icon
-+ title + auto detail + time; on completion the icon flips to a
-check-circle. On finish: "Connected" + green dot restored, avatar
-normal, Stop reverts to Send on the cleared composer. No spinner,
-no separate status text in the log. Structural correlate:
-per-item DIV[aria-busy] toggles true mid-generation (nodes appear
-replaced, not mutated).
+Still unobserved at survey time: no genuine approval request
+occurred in any test chat; nothing simulated; the Approvals tab
+was not treated as a specimen. Carried as unobserved to closeout
+unless a genuine request appears.
 
-Desk implication: one "Kavi is working" grammar — header line +
-Stop control + running entry with a distinct progress icon that
-flips to check on completion. Mirror the Stop affordance; map the
-desk pulse to their progressive text + is-responding header.
+## S8 — Scheduled tasks (row-form + management dialog only)
+
+"See all scheduled tasks" opens a "Scheduled tasks" DIALOG (not a
+view): Close, H3 "Daily", one entry row button per task (no
+inputs, no create button, no list chrome). Entry detail dialog:
+H2 title, Close, Run history (expandable, collapsed — interior
+deliberately not opened), See more, View permissions, Delete.
+No edit/cancel invoked; no owner task content quoted. Creation
+entry point unobserved in this surface (possibly chat-driven or
+in Settings — S12 may surface it; not chased by creating one).
+
+Desk implication: mirror the management dialog shape (day-grouped
+task rows) and the entry affordance labels; creation flow stays
+unmapped until observed.
