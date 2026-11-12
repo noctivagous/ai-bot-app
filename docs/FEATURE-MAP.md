@@ -3,9 +3,10 @@
 **Status: DRAFT v0.1 (2026-11-12)** — drafted from the calibration DOM
 survey (`docs/survey/muse-ai-dom-survey.md`), the calibration report, and
 the public features page. It has **not** yet seen the client's surfaces
-rendered; `docs/muse-code-ui-survey-brief.md` commissions that survey, and
-its report revises this map. The owner judges the verdicts; nothing here is
-a build order yet.
+rendered; `docs/muse-code-ui-survey-brief.md` commissions that survey,
+which runs as a working loop in a side chat (Muse Code ↔ Kavi), and
+this map is revised incrementally as its findings accumulate. The owner
+judges the verdicts; nothing here is a build order yet.
 
 Verdicts: **mirror** (same words/behaviour — it is the product's, not ours)
 · **adapt** (same job, desk form) · **different** (deliberately not mapped).

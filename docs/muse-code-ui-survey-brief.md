@@ -18,6 +18,31 @@ the desk's UI maps onto the client's surfaces faithfully — same words, same
 behaviour where behaviour is the product's, our own graphite skin kept.
 This survey is the evidence base for that mapping.
 
+## The working loop
+
+This is not a one-shot assignment. The owner will wire up a side chat as a
+working room where you and a Muse (Kavi's counterpart, seeded with this
+brief, the feature map, and the design context) can talk directly. Work
+the survey **in the loop**:
+
+- **Deliver per surface, not all at once.** Post each S-section to the
+  room as you finish it. Expect questions back — probes for the gaps a
+  first pass always leaves ("can a running Activity entry be captured?",
+  "what exactly does the switcher row show?") — and treat them as part of
+  the assignment, not interruptions.
+- **Ask as you go.** If a surface doesn't match this brief, a behaviour is
+  ambiguous, or a classification under S1–S12 is unclear, ask in the room
+  instead of guessing. Survey-scope clarifications get answered there.
+- **Escalations leave the room.** The Muse in the room cannot settle:
+  anything touching the owner's real conversations beyond shell
+  navigation, any interaction with an approval specimen, scope beyond
+  this survey, the feature map's owner decisions (D1–D3), or any
+  push/merge. Those go to the owner. Credential-shaped material is
+  refused outright, per the hard rules.
+- **The map is the loop's memory.** Kavi folds the room's findings into
+  `docs/FEATURE-MAP.md` as they accumulate; the branch deliverable below
+  remains the durable record of the finished survey.
+
 ## What to capture, per surface (report sections use these IDs)
 
 For every surface: **layout regions** (what sits where, in prose — left rail /
@@ -100,11 +125,10 @@ appears/disappears, what state changes look like).
   differently, keyed to `docs/FEATURE-MAP.md`.
 - Commit in small, labelled steps. **No push and no merge without the
   owner's word** — the owner relays and pushes as with calibration.
-- Report back in chat with: branch name, tip commit, and any surface that
-  could not be observed and why.
-- **You may also deliver the report directly to Kavi** in the chat the
-  owner wires up for this — paste it whole, however long it runs. There is
-  no size pressure on that channel and no need to compress, summarize, or
-  split it into excerpts; Kavi reads the full text and folds it into
+- When the survey is complete, close out in the room with: branch name,
+  tip commit, and any surface that could not be observed and why.
+- **Full text is welcome in the room, however long it runs.** There is no
+  size pressure on that channel and no need to compress, summarize, or
+  split findings into excerpts; they are read whole and folded into
   `docs/FEATURE-MAP.md`. The branch copy remains the durable record; the
-  direct delivery is how it gets discussed.
+  room is where the work gets discussed.
