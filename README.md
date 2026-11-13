@@ -45,6 +45,8 @@ Runs the full app against a simulated adapter — everything on the board works;
 
 ## Install (the real fuse)
 
+> **Prefer a guided walkthrough?** [`setup-guide.html`](setup-guide.html) — a self-contained click-through wizard (install, daily start, update, troubleshooting). Download it, open it in a browser, and follow the steps with clicks; it runs nothing, you copy each command yourself.
+
 Prerequisites: Node 20+, Chrome with Developer mode available, a muse.ai account you sign into yourself.
 
 ```bash

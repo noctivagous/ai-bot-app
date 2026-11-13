@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mission Desk — Setup Wizard</title>
+<style>
+  :root{
+    --bg:#131416; --bg2:#17181b; --panel:#1e2023; --panel2:#232529;
+    --edge:#2e3036; --edge-lit:#3a3d44;
+    --text:#e8e9ea; --dim:#a7abb3; --faint:#7c8087;
+    --amber:#f0b23e; --amber-dim:#8a6a24; --green:#7fc96a; --red:#e06c5a;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:linear-gradient(180deg,var(--bg2),var(--bg) 240px);color:var(--text);
+       font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+       height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  a{color:var(--amber);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.86em;background:#101112;border:1px solid var(--edge);
+       border-radius:4px;padding:.08em .38em;color:#f3d9a4}
+  .wrap{max-width:1060px;width:100%;margin:0 auto;padding:0 20px 16px;flex:1;min-height:0;
+        display:flex;flex-direction:column;position:relative}
+
+  /* ---------- wizard header (persistent) ---------- */
+  header{padding:20px 0 0;flex:none}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.22em;color:var(--amber);
+          text-transform:uppercase;margin:0 0 8px}
+  .headrow{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+  h1{font-size:26px;line-height:1.15;margin:0;font-weight:650;letter-spacing:-.01em}
+  h1 .thin{color:var(--dim);font-weight:400}
+  .headbtns{margin-left:auto;display:flex;gap:8px}
+  .btn{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:550;color:var(--dim);
+       background:linear-gradient(180deg,#2b2d33,#22242a);border:1px solid var(--edge-lit);
+       border-radius:7px;padding:7px 13px;max-height:40px;
+       box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 2px rgba(0,0,0,.5)}
+  .btn:hover{color:var(--text)}
+  .btn:disabled{opacity:.38;cursor:default}
+  .btn:disabled:hover{color:var(--dim)}
+  .crumbs{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0 12px;
+      padding:8px 12px;background:linear-gradient(180deg,#26282d,#1d1f23);border:1px solid var(--edge);
+      border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 4px 14px rgba(0,0,0,.45);
+      font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .crumbs .sep{color:var(--amber-dim)}
+  .crumbs .here{color:var(--amber)}
+
+  /* ---------- scrolling node region + drawn scrollbar ---------- */
+  .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;
+      padding:2px 14px 26px 2px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none;width:0;height:0}
+  .scroll:focus{outline:none}
+  #vbar{position:absolute;right:5px;width:12px;border-radius:7px;z-index:30;display:none;
+      background:rgba(255,255,255,.04);box-shadow:inset 0 1px 4px rgba(0,0,0,.55);cursor:pointer}
+  #vbar.show{display:block}
+  #vthumb{position:absolute;left:1px;width:10px;border-radius:6px;cursor:grab;
+      background:linear-gradient(180deg,#454954,#2f3239);border:1px solid #4d515c;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 3px rgba(0,0,0,.5)}
+  #vthumb:hover{background:linear-gradient(180deg,#515663,#383b43)}
+  #vbar.dragging #vthumb,#vthumb:active{cursor:grabbing;
+      background:linear-gradient(180deg,#ffc95e,var(--amber));border-color:var(--amber-dim)}
+
+  /* ---------- node panel & type ---------- */
+  .panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--edge);
+      border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 10px rgba(0,0,0,.4);
+      padding:22px 24px;margin:0 0 18px;animation:fade .18s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .nkicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--faint);
+      text-transform:uppercase;margin:0 0 8px}
+  h2{font-size:21px;margin:2px 0 12px;font-weight:640;letter-spacing:-.01em}
+  h3{font-size:15.5px;margin:20px 0 8px;font-weight:620}
+  h3:first-child{margin-top:0}
+  p{margin:0 0 12px;color:#d6d8db}
+  p.dim,li.dim{color:var(--dim)}
+  ul,ol{margin:0 0 12px;padding-left:22px;color:#d6d8db}
+  li{margin:4px 0}
+  .warn{border-left:3px solid var(--red);background:#1d1a1a;border-radius:0 9px 9px 0;padding:12px 16px;margin:0 0 14px}
+  .warn p{margin:0;font-size:13.5px;color:#e3cfcb}
+  .note{border-left:3px solid var(--amber);background:#1d1b16;border-radius:0 9px 9px 0;padding:12px 16px;margin:0 0 14px}
+  .note p{margin:0;font-size:13.5px;color:#e6dcc4}
+  .donebox{border-left:3px solid var(--green);background:#181d16;border-radius:0 9px 9px 0;padding:12px 16px;margin:0 0 14px}
+  .donebox p{margin:0;font-size:13.5px;color:#d8e6cf}
+
+  /* command blocks */
+  .term{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--amber);
+      text-transform:uppercase;margin:14px 0 6px}
+  .term:first-child{margin-top:0}
+  .cmd{position:relative;background:#0e0f10;border:1px solid var(--edge);border-radius:9px;
+       box-shadow:inset 0 2px 10px rgba(0,0,0,.7);padding:13px 64px 13px 16px;margin:0 0 14px;overflow-x:auto}
+  .cmd::-webkit-scrollbar{height:10px}
+  .cmd::-webkit-scrollbar-thumb{background:#33363d;border-radius:6px;border:2px solid #0e0f10}
+  .cmd::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+  .cmd pre{margin:0;font-family:var(--mono);font-size:13px;line-height:1.6;color:#f0e3c0;white-space:pre}
+  .cmd button{position:absolute;top:8px;right:8px;appearance:none;cursor:pointer;
+      background:linear-gradient(180deg,#2e3036,#232529);color:var(--dim);border:1px solid var(--edge-lit);
+      border-radius:6px;font-family:var(--mono);font-size:11px;padding:4px 9px;max-height:32px}
+  .cmd button:hover{color:var(--text)}
+  .cmd button.ok{color:var(--green);border-color:#3f5a34}
+
+  /* choices + actions */
+  .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:16px 0 4px}
+  .choice{appearance:none;cursor:pointer;text-align:left;font:inherit;font-size:14.5px;font-weight:580;
+      color:var(--text);background:linear-gradient(180deg,#2b2d33,#22242a);border:1px solid var(--edge-lit);
+      border-radius:9px;padding:11px 15px;min-height:44px;max-height:50px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 2px rgba(0,0,0,.5)}
+  .choice:hover{border-color:var(--amber-dim);color:#fff}
+  .choice small{display:block;font-weight:400;font-size:12.5px;color:var(--dim);margin-top:2px}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 2px}
+  .go{appearance:none;cursor:pointer;font:inherit;font-size:14px;font-weight:620;color:#171408;
+      background:linear-gradient(180deg,#ffc95e,var(--amber));border:1px solid var(--amber-dim);
+      border-radius:8px;padding:10px 18px;min-height:44px;max-height:50px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 1px 3px rgba(0,0,0,.5)}
+  .go:hover{filter:brightness(1.05)}
+  .go.alt{color:var(--dim);background:linear-gradient(180deg,#2b2d33,#22242a);border-color:var(--edge-lit);
+      font-weight:550;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 2px rgba(0,0,0,.5)}
+  .go.alt:hover{color:var(--text)}
+
+  /* ticks */
+  .ticks{margin:14px 0 2px;border-top:1px solid var(--edge);padding-top:12px}
+  label.tick{display:flex;gap:9px;align-items:flex-start;cursor:pointer;color:var(--dim);font-size:13.5px;margin-top:6px}
+  label.tick input{margin-top:3px;accent-color:var(--amber)}
+
+  footer{color:var(--faint);font-size:12.5px;flex:none;margin-top:12px;border-top:1px solid var(--edge);padding-top:12px}
+  footer code{font-size:11px}
+  @media (max-width:640px){ h1{font-size:23px} .headbtns{margin-left:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="kicker">ai-bot-app · Setup wizard</p>
+  <div class="headrow">
+    <h1>Mission Desk <span class="thin">— set it up, step by step</span></h1>
+    <div class="headbtns">
+      <button class="btn" id="backBtn" type="button">← Back</button>
+      <button class="btn" id="startOverBtn" type="button">Start over</button>
+    </div>
+  </div>
+  <div class="crumbs" id="crumbs" aria-label="Path so far"></div>
+</header>
+
+<main class="scroll" id="scroll" tabindex="0">
+  <div id="nodeHost"></div>
+</main>
+
+<div id="vbar" aria-hidden="true"><div id="vthumb"></div></div>
+
+<footer>
+  Mission Desk for Muse · ai-bot-app · This wizard is a single self-contained file — it works
+  opened straight from disk, no server, no network, and it runs nothing: every command is yours to copy and run.
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= helpers ================= */
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  // A command well. `term` names the terminal the command belongs to.
+  function CMD(text, term){
+    return (term ? '<div class="term">' + esc(term) + "</div>" : "") +
+      '<div class="cmd"><pre>' + esc(text) + '</pre><button type="button" data-copy>copy</button></div>';
+  }
+  function TICKS(list){
+    if(!list || !list.length) return "";
+    return '<div class="ticks">' + list.map(function(t){
+      return '<label class="tick"><input type="checkbox" data-tick="' + t[0] + '"> ' + t[1] + "</label>";
+    }).join("") + "</div>";
+  }
+  function osName(os){ return os === "win" ? "Windows" : os === "mac" ? "macOS" : ""; }
+  // Per-OS pairing-file path shape (the repo folder, wherever it was put).
+  function pairPath(os){
+    return os === "win" ? "C:\\Users\\you\\ai-bot-app\\bridge\\.pairing.json"
+                        : "~/ai-bot-app/bridge/.pairing.json";
+  }
+  function extPath(os){
+    return os === "win" ? "C:\\Users\\you\\ai-bot-app\\extension"
+                        : "~/ai-bot-app/extension";
+  }
+
+  /* ================= the tree =================
+     Each node: crumb (array; "{OS}" is replaced by the chosen OS),
+     view(S) -> { kicker, title, body (HTML), ticks, actions }.
+     Each action: { label, sub?, to, os?, kind: "choice" | "go" | "alt" }. */
+  var NODES = {
+
+  /* ---------- ROOT ---------- */
+  root: {
+    crumb: ["Start"],
+    view: function(){
+      return {
+        kicker: "Mission Desk setup wizard",
+        title: "What are you doing?",
+        body:
+          "<p>This wizard walks you through Mission Desk one decision at a time. " +
+          "It is a guide, not an installer: <b>this page executes nothing</b>. You read a step, " +
+          "copy its command, run it yourself in your own terminal, then click on.</p>" +
+          "<p>That is deliberate. Mission Desk has several moving parts — a bridge, an app page, " +
+          "a browser extension, and your muse.ai tab — and guided steps are easier to follow than " +
+          "a launcher script. Scripts have a second problem: Gatekeeper on macOS and SmartScreen " +
+          "on Windows both fight unsigned scripts on first run. An HTML file has nothing to sign " +
+          "and nothing to block — you stay in control of every command that runs.</p>" +
+          "<p class='dim'>Pick where you are. You can go Back at any point, or Start over.</p>",
+        actions: [
+          { label: "Install Mission Desk", sub: "First time, on this machine", to: "installOs", kind: "choice" },
+          { label: "Start it for the day", sub: "Already installed — just launch it", to: "startHub", kind: "choice" },
+          { label: "Update to the latest version", sub: "Pull the new code and restart", to: "updateHub", kind: "choice" },
+          { label: "Fix a problem", sub: "Something is red, missing, or stuck", to: "fixHub", kind: "choice" }
+        ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: OS ---------- */
+  installOs: {
+    crumb: ["Install", "System"],
+    view: function(){
+      return {
+        kicker: "Install",
+        title: "Which system are you on?",
+        body: "<p>A few steps differ — install commands and file paths. The wizard remembers " +
+              "your answer and renders only your system's version from here on.</p>",
+        actions: [
+          { label: "macOS", to: "installIntro", os: "mac", kind: "choice" },
+          { label: "Windows", to: "installIntro", os: "win", kind: "choice" }
+        ]
+      };
+    }
+  },
+
+  installIntro: {
+    crumb: ["Install", "{OS}", "Overview"],
+    view: function(S){
+      return {
+        kicker: "Install · " + osName(S.os),
+        title: "What you'll end up with",
+        body:
+          "<ul>" +
+          "<li><b>The bridge</b> — a small local program on 127.0.0.1:7701 that relays between the app and the extension, and holds the pairing token.</li>" +
+          "<li><b>The Mission Desk app page</b> — served from your machine at localhost:4173, open in one browser tab.</li>" +
+          "<li><b>The extension + your muse.ai tab</b> — the extension loaded into Chrome, paired with the bridge, riding in the muse.ai tab you open and sign into yourself.</li>" +
+          "</ul>" +
+          "<h3>What you need</h3>" +
+          "<ul>" +
+          "<li><b>Chrome</b> (or Chromium), with Developer mode available for extensions.</li>" +
+          "<li><b>A terminal</b> — " + (S.os === "win" ? "Windows Terminal or PowerShell" : "Terminal") + ". Two windows of it, by the end.</li>" +
+          "<li><b>About 10 minutes</b>, and a muse.ai account you sign into yourself. Nothing in this stack ever sees your password.</li>" +
+          "</ul>",
+        actions: [ { label: "Continue", to: "nodeCheck", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: Node ---------- */
+  nodeCheck: {
+    crumb: ["Install", "{OS}", "Node"],
+    view: function(){
+      return {
+        kicker: "Install · Check",
+        title: "Is Node 20 or higher installed?",
+        body:
+          "<p>Mission Desk's bridge and app both run on Node. Open a terminal and run:</p>" +
+          CMD("node --version", "Terminal") +
+          "<p>It prints something like <code>v20.11.0</code> or <code>v22.x</code>. " +
+          "Any version starting with v20 or higher is fine.</p>",
+        actions: [
+          { label: "I see v20 or higher", to: "getCode", kind: "go" },
+          { label: "Command not found, or lower than v20", to: "nodeInstall", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  nodeInstall: {
+    crumb: ["Install", "{OS}", "Node", "Install Node"],
+    view: function(S){
+      var body;
+      if (S.os === "win") {
+        body =
+          "<p>Two ways — the installer is the simplest:</p>" +
+          "<ul>" +
+          "<li><b>Installer:</b> download the LTS version from <b>nodejs.org</b> and run it, accepting the defaults.</li>" +
+          "<li><b>Or winget:</b> if you use the Windows package manager, run:</li>" +
+          "</ul>" +
+          CMD("winget install OpenJS.NodeJS.LTS", "Terminal");
+      } else if (S.os === "mac") {
+        body =
+          "<p>Two ways — the installer is the simplest:</p>" +
+          "<ul>" +
+          "<li><b>Installer:</b> download the LTS version from <b>nodejs.org</b> and run it, accepting the defaults.</li>" +
+          "<li><b>Or Homebrew:</b> if you already use Homebrew, run:</li>" +
+          "</ul>" +
+          CMD("brew install node@20", "Terminal");
+      } else {
+        body =
+          "<p><b>macOS:</b> download the LTS installer from <b>nodejs.org</b>, or with Homebrew run " +
+          "<code>brew install node@20</code>.</p>" +
+          "<p><b>Windows:</b> download the LTS installer from <b>nodejs.org</b>, or run " +
+          "<code>winget install OpenJS.NodeJS.LTS</code>.</p>";
+      }
+      body +=
+        "<p>When it finishes, <b>close the terminal and open a fresh one</b> — an already-open " +
+        "terminal won't see the new install. Then re-run the check.</p>";
+      return {
+        kicker: "Install · Node",
+        title: "Install Node first",
+        body: body,
+        actions: [ { label: "Done — re-check Node", to: "nodeCheck", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: get the code ---------- */
+  getCode: {
+    crumb: ["Install", "{OS}", "Get the code"],
+    view: function(){
+      return {
+        kicker: "Install · Code",
+        title: "How will you get the code?",
+        body: "<p>The project lives on GitHub as <code>noctivagous/ai-bot-app</code>. " +
+              "Either way works — the rest of the wizard is identical.</p>",
+        actions: [
+          { label: "I use git", sub: "Clone it from the terminal", to: "getGit", kind: "choice" },
+          { label: "No git", sub: "Download a ZIP from GitHub instead", to: "getZip", kind: "choice" }
+        ]
+      };
+    }
+  },
+
+  getGit: {
+    crumb: ["Install", "{OS}", "Get the code", "Git"],
+    view: function(){
+      return {
+        kicker: "Install · Code",
+        title: "Clone the repo",
+        body: CMD("git clone https://github.com/noctivagous/ai-bot-app.git\ncd ai-bot-app", "Terminal") +
+          "<p class='dim'>Run this wherever you keep projects. From here on, commands assume " +
+          "you are inside the <code>ai-bot-app</code> folder unless a step says otherwise.</p>",
+        ticks: [ ["clone", "Cloned, and the terminal is inside the ai-bot-app folder"] ],
+        actions: [ { label: "Done — continue", to: "deps", kind: "go" } ]
+      };
+    }
+  },
+
+  getZip: {
+    crumb: ["Install", "{OS}", "Get the code", "ZIP"],
+    view: function(){
+      return {
+        kicker: "Install · Code",
+        title: "Download and unzip",
+        body:
+          "<ol>" +
+          "<li>Open the repo on GitHub: <code>github.com/noctivagous/ai-bot-app</code></li>" +
+          "<li>Click <b>Code</b>, then <b>Download ZIP</b>.</li>" +
+          "<li>Unzip it wherever you keep projects.</li>" +
+          "</ol>" +
+          "<p>The unzipped folder may be named <code>ai-bot-app-main</code> instead of " +
+          "<code>ai-bot-app</code> — that's fine. Open a terminal inside it:</p>" +
+          CMD("cd ai-bot-app", "Terminal") +
+          "<p class='dim'>Adjust the folder name in that command if yours differs. From here on, " +
+          "commands assume you are inside the repo folder unless a step says otherwise.</p>",
+        ticks: [ ["zip", "Unzipped, and the terminal is inside the repo folder"] ],
+        actions: [ { label: "Done — continue", to: "deps", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: dependencies ---------- */
+  deps: {
+    crumb: ["Install", "{OS}", "Dependencies"],
+    view: function(){
+      return {
+        kicker: "Install · Dependencies",
+        title: "Install dependencies",
+        body:
+          "<p>Two sets: the app's, then the bridge's. Run all four lines, in order:</p>" +
+          CMD("npm install\ncd bridge\nnpm install\ncd ..", "Terminal — repo root") +
+          "<p class='dim'>This can take a minute and prints a lot. What matters is that it " +
+          "ends without a block of red errors. (If it does error, the Fix branch has a " +
+          "Node-version check — the usual cause.)</p>",
+        ticks: [ ["deps", "Both installs finished without errors"] ],
+        actions: [ { label: "Done — continue", to: "bridgeStart", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: bridge ---------- */
+  bridgeStart: {
+    crumb: ["Install", "{OS}", "Bridge"],
+    view: function(S){
+      return {
+        kicker: "Install · Bridge",
+        title: "Start the bridge — and leave it running",
+        body:
+          "<p>This terminal becomes <b>Terminal 1</b>. The bridge occupies it for as long as " +
+          "Mission Desk is in use, so it gets a terminal of its own.</p>" +
+          CMD("cd ai-bot-app/bridge\nnpm start", "Terminal 1 — bridge") +
+          "<p>Two things happen on this first run:</p>" +
+          "<ul>" +
+          "<li>The bridge starts listening on <b>127.0.0.1:7701</b> — this machine only.</li>" +
+          "<li>It creates the <b>pairing token</b> at <code>bridge/.pairing.json</code> and prints that path (never the token itself). Full path on this system: <code>" + esc(pairPath(S.os)) + "</code></li>" +
+          "</ul>" +
+          "<div class='note'><p><b>The token never leaves this machine.</b> It exists only in " +
+          "that file and, once you pair, in the extension's own storage. It is not in the repo " +
+          "and is never shared or sent anywhere.</p></div>" +
+          "<p class='dim'>Leave Terminal 1 open and running. Every later terminal is a new one.</p>",
+        ticks: [ ["bridge", "Bridge is running in Terminal 1"] ],
+        actions: [ { label: "Done — continue", to: "extLoad", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: extension ---------- */
+  extLoad: {
+    crumb: ["Install", "{OS}", "Extension"],
+    view: function(S){
+      return {
+        kicker: "Install · Extension",
+        title: "Load the extension into Chrome",
+        body:
+          "<ol>" +
+          "<li>Open <code>chrome://extensions</code> in Chrome.</li>" +
+          "<li>Turn on <b>Developer mode</b> — the switch at the top right of that page.</li>" +
+          "<li>Click <b>Load unpacked</b>.</li>" +
+          "<li>Select the repo's <code>extension</code> folder. On this system its path looks like <code>" + esc(extPath(S.os)) + "</code> — pick the folder itself, wherever you put the repo.</li>" +
+          "</ol>" +
+          "<p>The card “Mission Desk — Muse bridge” appears in the list, and its icon joins " +
+          "Chrome's toolbar (behind the puzzle-piece menu — pin it from there so it's one click away).</p>",
+        ticks: [ ["ext", "Extension loaded, and pinned to the toolbar"] ],
+        actions: [ { label: "Done — continue", to: "pair", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: pairing ---------- */
+  pair: {
+    crumb: ["Install", "{OS}", "Pairing"],
+    view: function(S){
+      return {
+        kicker: "Install · Pairing",
+        title: "Pair the extension with the bridge",
+        body:
+          "<ol>" +
+          "<li>Open <code>bridge/.pairing.json</code> in any text editor — on this system: <code>" + esc(pairPath(S.os)) + "</code>. It holds one value, named <code>\"token\"</code>. Copy that value.</li>" +
+          "<li>Click the Mission Desk extension icon in Chrome's toolbar. The popup is titled <b>“Mission Desk — Muse bridge”</b>.</li>" +
+          "<li>Paste the token into the field labelled <b>“Pairing token”</b>.</li>" +
+          "<li>Click <b>“Save token”</b>. The popup answers “Saved — reconnecting…”, then should read <b>“Bridge: connected.”</b></li>" +
+          "</ol>" +
+          "<div class='note'><p>The popup's own words for this step: “Paste the pairing token " +
+          "printed by the bridge on first run (stored in <code>bridge/.pairing.json</code> next to " +
+          "the bridge). The token is kept in extension storage only — it is never sent to any web page.”</p></div>" +
+          "<p class='dim'>If it instead says “Bridge: not connected.”, the bridge isn't running — " +
+          "check Terminal 1. The Fix branch covers token mismatches.</p>",
+        ticks: [ ["pair", "Popup says “Bridge: connected.”"] ],
+        actions: [ { label: "Done — continue", to: "claudeTab", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: Muse tab ---------- */
+  claudeTab: {
+    crumb: ["Install", "{OS}", "Muse tab"],
+    view: function(){
+      return {
+        kicker: "Install · Muse tab",
+        title: "Open muse.ai and sign in",
+        body:
+          "<p>Open <a href='https://muse.ai' target='_blank' rel='noopener'>muse.ai</a> in a " +
+          "normal Chrome tab and sign in, exactly as you usually do. The extension's content " +
+          "script activates inside that tab on its own — there is nothing to click in the page, " +
+          "and it draws nothing on it.</p>" +
+          "<p><b>Leave the tab open.</b> The desk needs that tab alive: it is where the agent " +
+          "actually is. Closing it is fine — the desk notices and recovers when you reopen it — " +
+          "but while it's closed, the desk can't work.</p>",
+        ticks: [ ["claude-tab", "muse.ai is open and signed in"] ],
+        actions: [ { label: "Done — continue", to: "appStart", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: app ---------- */
+  appStart: {
+    crumb: ["Install", "{OS}", "App"],
+    view: function(){
+      return {
+        kicker: "Install · App",
+        title: "Build and start the app",
+        body:
+          "<p>Open a <b>second, new</b> terminal — this becomes <b>Terminal 2</b> — and go to " +
+          "the repo root (not the bridge folder):</p>" +
+          CMD("cd ai-bot-app\nnpm run build && npx vite preview", "Terminal 2 — app") +
+          "<p>The first line builds the app; the second serves it. Then open the desk:</p>" +
+          "<p><code>http://localhost:4173/?adapter=muse</code></p>" +
+          "<p class='dim'>Leave Terminal 2 running too. Mission Desk in use = Terminal 1 " +
+          "(bridge) + Terminal 2 (app) + the app tab + the muse.ai tab.</p>",
+        ticks: [ ["app", "The Mission Desk page is open in a tab"] ],
+        actions: [ { label: "Done — continue", to: "verify", kind: "go" } ]
+      };
+    }
+  },
+
+  /* ---------- INSTALL: verify ---------- */
+  verify: {
+    crumb: ["Install", "{OS}", "Verify"],
+    view: function(){
+      return {
+        kicker: "Install · Verify",
+        title: "Check the lamp: 11/11 and ready",
+        body:
+          "<p>In the Mission Desk tab, look at the top strip. The adapter cluster — the lamp " +
+          "and the words beside it — should read <b>“Muse AI adapter · ready”</b> with " +
+          "<b>11/11</b> next to it.</p>" +
+          "<p>Click the cluster to open the connection popover: the full check list lives there " +
+          "(Bridge reachable, Extension connected, Muse tab found, Muse page ready, Signed in, " +
+          "Composer found, Message list found, Reply observer armed, plus the optional Approval " +
+          "observer, Activity observer and Activity panel observer). Readiness is derived from " +
+          "these checks and nothing else — all required checks passing is what “ready” means.</p>",
+        actions: [
+          { label: "All green — ready, 11/11", to: "doneInstall", kind: "go" },
+          { label: "Something's red", sub: "", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  doneInstall: {
+    crumb: ["Install", "{OS}", "Done"],
+    view: function(){
+      return {
+        kicker: "Install · Done",
+        title: "Installed — that's the whole setup",
+        body:
+          "<div class='donebox'><p><b>What's running now:</b> the bridge in Terminal 1 " +
+          "(127.0.0.1:7701), the app served from Terminal 2 at localhost:4173, the extension " +
+          "paired in Chrome, and your muse.ai tab beside the desk. The desk's lamp reads ready, 11/11.</p></div>" +
+          "<ul>" +
+          "<li><b>To stop:</b> press <code>Ctrl+C</code> in Terminal 1 and Terminal 2. The tabs can just close.</li>" +
+          "<li><b>Tomorrow:</b> you don't repeat any of this. Use this wizard's <b>Start it for the day</b> branch — two terminals, two tabs.</li>" +
+          "<li><b>Work in the app tab.</b> The muse.ai tab just needs to stay open beside it.</li>" +
+          "</ul>",
+        actions: [ { label: "Back to the start", to: "root", kind: "alt" } ]
+      };
+    }
+  },
+
+  /* ---------- START (daily) ---------- */
+  startHub: {
+    crumb: ["Start", "Terminals"],
+    view: function(){
+      return {
+        kicker: "Start · Daily launch",
+        title: "Start it for the day",
+        body:
+          "<p>Already installed? Then it's just two terminals. Open the first:</p>" +
+          CMD("cd ai-bot-app/bridge\nnpm start", "Terminal 1 — bridge") +
+          "<p>Open a second terminal, at the repo root:</p>" +
+          CMD("cd ai-bot-app\nnpm run build && npx vite preview", "Terminal 2 — app") +
+          "<p class='dim'>Leave both running. (If your repo folder is named " +
+          "<code>ai-bot-app-main</code> from a ZIP download, use that name in both commands.)</p>",
+        ticks: [
+          ["start-bridge", "Terminal 1: bridge running"],
+          ["start-app", "Terminal 2: app served"]
+        ],
+        actions: [ { label: "Done — continue", to: "startTabs", kind: "go" } ]
+      };
+    }
+  },
+
+  startTabs: {
+    crumb: ["Start", "Tabs"],
+    view: function(){
+      return {
+        kicker: "Start · Tabs",
+        title: "Open the two tabs",
+        body:
+          "<ol>" +
+          "<li>The desk: <code>http://localhost:4173/?adapter=muse</code></li>" +
+          "<li><a href='https://muse.ai' target='_blank' rel='noopener'>muse.ai</a> — sign in if it asks, and leave the tab open.</li>" +
+          "</ol>" +
+          "<p class='dim'>Order doesn't matter much here — the desk notices the muse.ai tab " +
+          "arrive on its own, within seconds.</p>",
+        ticks: [ ["start-tabs", "Both tabs are open"] ],
+        actions: [ { label: "Done — continue", to: "startVerify", kind: "go" } ]
+      };
+    }
+  },
+
+  startVerify: {
+    crumb: ["Start", "Check"],
+    view: function(){
+      return {
+        kicker: "Start · Check",
+        title: "One glance at the lamp",
+        body:
+          "<p>In the Mission Desk tab, the adapter cluster in the top strip should read " +
+          "<b>“Muse AI adapter · ready”</b> with <b>11/11</b>. Click it if you want the full " +
+          "check list. Green lamp = you're working.</p>",
+        actions: [
+          { label: "Ready — done", to: "doneStart", kind: "go" },
+          { label: "Not ready", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  doneStart: {
+    crumb: ["Start", "Done"],
+    view: function(){
+      return {
+        kicker: "Start · Done",
+        title: "You're up",
+        body:
+          "<div class='donebox'><p>Bridge in Terminal 1, app in Terminal 2, desk tab and " +
+          "muse.ai tab open, lamp at ready 11/11. To stop at the end of the day: " +
+          "<code>Ctrl+C</code> in both terminals.</p></div>",
+        actions: [ { label: "Back to the start", to: "root", kind: "alt" } ]
+      };
+    }
+  },
+
+  /* ---------- UPDATE ---------- */
+  updateHub: {
+    crumb: ["Update", "Get the code"],
+    view: function(){
+      return {
+        kicker: "Update",
+        title: "How did you get the code originally?",
+        body: "<p>Updating follows the same route you installed by.</p>",
+        actions: [
+          { label: "I use git", sub: "Pull the latest", to: "updateGit", kind: "choice" },
+          { label: "ZIP download", sub: "Re-download and replace", to: "updateZip", kind: "choice" }
+        ]
+      };
+    }
+  },
+
+  updateGit: {
+    crumb: ["Update", "Git pull"],
+    view: function(){
+      return {
+        kicker: "Update · Git",
+        title: "Pull the latest version",
+        body:
+          "<p>Stop the bridge and app first (<code>Ctrl+C</code> in both terminals), then:</p>" +
+          CMD("cd ai-bot-app\ngit pull", "Terminal — repo root") +
+          "<p class='dim'>Your pairing token survives untouched: <code>bridge/.pairing.json</code> " +
+          "is a local file that git doesn't track (it's in <code>.gitignore</code>), so a pull " +
+          "never overwrites it. No re-pairing needed.</p>",
+        ticks: [ ["upd-pull", "Pulled"] ],
+        actions: [ { label: "Done — continue", to: "updateDeps", kind: "go" } ]
+      };
+    }
+  },
+
+  updateZip: {
+    crumb: ["Update", "ZIP"],
+    view: function(){
+      return {
+        kicker: "Update · ZIP",
+        title: "Re-download and replace — keep your pairing file",
+        body:
+          "<ol>" +
+          "<li>Stop the bridge and app first (<code>Ctrl+C</code> in both terminals).</li>" +
+          "<li><b>Before replacing anything:</b> copy <code>bridge/.pairing.json</code> out of your current repo folder to somewhere safe. That file is yours — it was created on your machine, it is not part of the download, and a fresh ZIP does not contain it.</li>" +
+          "<li>Download the new ZIP from GitHub (<b>Code</b> → <b>Download ZIP</b>), unzip it, and replace your old repo folder's contents with the new ones.</li>" +
+          "<li>Copy your saved <code>.pairing.json</code> back into the new <code>bridge/</code> folder. Same token, no re-pairing.</li>" +
+          "</ol>" +
+          "<div class='warn'><p>If the pairing file is lost, that's recoverable, not fatal: " +
+          "the bridge creates a new token on its next start, and you pair again with the new " +
+          "value. The token-regeneration steps are in this wizard's Fix branch, under " +
+          "“Token mismatch / pairing fails”.</p></div>",
+        ticks: [
+          ["upd-zip-save", "bridge/.pairing.json copied somewhere safe"],
+          ["upd-zip-replace", "New code in place, pairing file restored into bridge/"]
+        ],
+        actions: [ { label: "Done — continue", to: "updateDeps", kind: "go" } ]
+      };
+    }
+  },
+
+  updateDeps: {
+    crumb: ["Update", "Dependencies + build"],
+    view: function(){
+      return {
+        kicker: "Update · Dependencies",
+        title: "Refresh dependencies and rebuild",
+        body:
+          "<p>New code can bring new dependencies. From the repo root:</p>" +
+          CMD("npm install\ncd bridge\nnpm install\ncd ..\nnpm run build", "Terminal — repo root"),
+        ticks: [ ["upd-deps", "Installs finished, build succeeded"] ],
+        actions: [ { label: "Done — continue", to: "updateRestart", kind: "go" } ]
+      };
+    }
+  },
+
+  updateRestart: {
+    crumb: ["Update", "Restart + reload extension"],
+    view: function(){
+      return {
+        kicker: "Update · Restart",
+        title: "Restart both terminals — and reload the extension",
+        body:
+          CMD("cd ai-bot-app/bridge\nnpm start", "Terminal 1 — bridge") +
+          CMD("cd ai-bot-app\nnpx vite preview", "Terminal 2 — app") +
+          "<h3>Then reload the extension — this step is not optional</h3>" +
+          "<ol>" +
+          "<li>Open <code>chrome://extensions</code>.</li>" +
+          "<li>Find the “Mission Desk — Muse bridge” card.</li>" +
+          "<li>Click its <b>Reload</b> button (the circular-arrow icon on the card).</li>" +
+          "</ol>" +
+          "<div class='warn'><p><b>Reloading the page is not enough.</b> Chrome can keep serving " +
+          "a snapshot of the extension folder from when it was loaded, so after an update the " +
+          "extension in your browser may still be the old code until you press Reload on its " +
+          "card. If the desk behaves like the update never happened, this is the step that was missed.</p></div>" +
+          "<p class='dim'>Reload the muse.ai tab too, so the fresh content script is the one running in it.</p>",
+        ticks: [
+          ["upd-restart", "Both terminals restarted"],
+          ["upd-extreload", "Extension reloaded from its card in chrome://extensions"]
+        ],
+        actions: [ { label: "Done — continue", to: "updateVerify", kind: "go" } ]
+      };
+    }
+  },
+
+  updateVerify: {
+    crumb: ["Update", "Verify"],
+    view: function(){
+      return {
+        kicker: "Update · Verify",
+        title: "Check the lamp again",
+        body:
+          "<p>Open <code>http://localhost:4173/?adapter=muse</code>. The adapter cluster should " +
+          "read <b>“Muse AI adapter · ready”</b>, <b>11/11</b>. Click it for the full check list.</p>",
+        actions: [
+          { label: "Ready — updated", to: "doneUpdate", kind: "go" },
+          { label: "Something's red", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  doneUpdate: {
+    crumb: ["Update", "Done"],
+    view: function(){
+      return {
+        kicker: "Update · Done",
+        title: "Updated",
+        body:
+          "<div class='donebox'><p>Latest code pulled, dependencies refreshed, app rebuilt, " +
+          "both terminals restarted, extension reloaded from its card — and your pairing token " +
+          "carried through, so no re-pairing was needed. Lamp at ready, 11/11.</p></div>",
+        actions: [ { label: "Back to the start", to: "root", kind: "alt" } ]
+      };
+    }
+  },
+
+  /* ---------- FIX ---------- */
+  fixHub: {
+    crumb: ["Fix", "Symptom"],
+    view: function(){
+      return {
+        kicker: "Fix",
+        title: "What's the symptom?",
+        body: "<p>Pick the closest match. Each answer is short, and most fixes take under a minute.</p>",
+        actions: [
+          { label: "Port already in use", sub: "4173 or 7701 is taken", to: "fixPort", kind: "choice" },
+          { label: "Token mismatch / pairing fails", sub: "Popup won't say connected", to: "fixToken", kind: "choice" },
+          { label: "App says the Muse tab is closed", sub: "But it looks open to you", to: "fixTab", kind: "choice" },
+          { label: "Extension button missing or stale", sub: "No icon, or old behaviour", to: "fixExt", kind: "choice" },
+          { label: "Node errors during npm install", sub: "Red errors in the install step", to: "fixNode", kind: "choice" },
+          { label: "Checks red, but everything's open", sub: "The order-of-operations reset", to: "fixRedAll", kind: "choice" },
+          { label: "Something else", sub: "What to write down, and where the docs are", to: "fixOther", kind: "choice" }
+        ]
+      };
+    }
+  },
+
+  fixPort: {
+    crumb: ["Fix", "Port in use"],
+    view: function(S){
+      var blocks = "";
+      if (S.os === "win") {
+        blocks =
+          "<p>Find what's holding the port — do this for the port in the error message:</p>" +
+          CMD("netstat -ano | findstr :4173", "Terminal") +
+          CMD("netstat -ano | findstr :7701", "Terminal") +
+          "<p>The last column is the process ID (PID). Open <b>Task Manager</b> → <b>Details</b>, " +
+          "find that PID, and end the task — a stale Mission Desk preview or bridge from an " +
+          "earlier session is the usual holder. Then restart the piece that failed.</p>";
+      } else {
+        // macOS, and the both-systems rendering when no OS was chosen.
+        blocks =
+          "<p>Find what's holding the port — do this for the port in the error message:</p>" +
+          CMD("lsof -i :4173", "Terminal") +
+          CMD("lsof -i :7701", "Terminal") +
+          "<p>The PID column names the holder — a stale Mission Desk preview or bridge from an " +
+          "earlier session is the usual one. Stop it with <code>kill &lt;PID&gt;</code>, or " +
+          "<code>Ctrl+C</code> in its terminal if you can see it. Then restart the piece that failed.</p>" +
+          (S.os ? "" : "<p class='dim'>On Windows: <code>netstat -ano | findstr :4173</code> (or " +
+            "<code>:7701</code>) shows the PID; end it from Task Manager → Details.</p>");
+      }
+      blocks +=
+        "<p class='dim'>One related trap: if the app starts on the wrong port or behaves like an " +
+        "older version, start the preview with <code>npx vite preview --port 4173 --strictPort</code> " +
+        "so it fails loudly instead of quietly drifting to another port.</p>";
+      return {
+        kicker: "Fix · Port",
+        title: "Port already in use",
+        body: blocks,
+        actions: [
+          { label: "Fixed — back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixToken: {
+    crumb: ["Fix", "Pairing"],
+    view: function(S){
+      return {
+        kicker: "Fix · Pairing",
+        title: "Token mismatch / pairing fails",
+        body:
+          "<p>Work through these in order — most mismatches are a stale copy of the token:</p>" +
+          "<ol>" +
+          "<li><b>Re-copy the token, fresh.</b> Open <code>bridge/.pairing.json</code> (on this system: <code>" + esc(pairPath(S.os)) + "</code>) and copy the <code>\"token\"</code> value again — the whole value, no spaces, no quotes.</li>" +
+          "<li><b>Check which bridge is running.</b> The bridge in Terminal 1 must be the one started from <i>this</i> repo's <code>bridge/</code> folder — a bridge from another copy of the repo has a different token. Its startup line prints the pairing file path it is using.</li>" +
+          "<li><b>Re-paste and save.</b> Extension icon → field labelled <b>“Pairing token”</b> → replace what's there → <b>“Save token”</b>. Wait for “Bridge: connected.”</li>" +
+          "</ol>" +
+          "<h3>If the token itself has to change</h3>" +
+          "<p>The token only regenerates when its file is gone. To mint a new one: stop the " +
+          "bridge, delete <code>bridge/.pairing.json</code>, start the bridge again — it writes " +
+          "a fresh token to the same path. Then pair once more with the new value (step 3 above). " +
+          "Every previously paired copy of the extension needs the new value too.</p>",
+        actions: [
+          { label: "Fixed — back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixTab: {
+    crumb: ["Fix", "Muse tab"],
+    view: function(){
+      return {
+        kicker: "Fix · Muse tab",
+        title: "App says the Muse tab is closed",
+        body:
+          "<p>The tab-dependent checks fail with <i>“Muse tab closed or not responding — " +
+          "reopen muse.ai”</i> whenever the desk can't hear the tab's heartbeat — closing it, " +
+          "navigating it away from muse.ai, or just a long-hidden tab whose timers Chrome " +
+          "throttled can all read the same way.</p>" +
+          "<ol>" +
+          "<li>Reopen <a href='https://muse.ai' target='_blank' rel='noopener'>muse.ai</a> in a tab (or bring the existing one to the front and reload it).</li>" +
+          "<li>Wait a few seconds. <b>The desk recovers on its own</b> — no reconnect ritual, and a draft you had typed is kept.</li>" +
+          "</ol>" +
+          "<p class='dim'>Still stuck with the tab plainly open? Check the extension popup says " +
+          "“Bridge: connected.”, then reload the extension from its card in " +
+          "<code>chrome://extensions</code> and reload the muse.ai tab.</p>",
+        actions: [
+          { label: "Fixed — back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixExt: {
+    crumb: ["Fix", "Extension"],
+    view: function(){
+      return {
+        kicker: "Fix · Extension",
+        title: "Extension button missing or stale",
+        body:
+          "<ol>" +
+          "<li>Open <code>chrome://extensions</code> and find the “Mission Desk — Muse bridge” card.</li>" +
+          "<li><b>Missing entirely?</b> It was never loaded on this Chrome profile, or was removed — load it again with <b>Load unpacked</b> (Developer mode on), selecting the repo's <code>extension</code> folder.</li>" +
+          "<li><b>Present but greyed or off?</b> Flip its enable switch on.</li>" +
+          "<li><b>Behaving like an old version?</b> Click the card's <b>Reload</b> (circular-arrow) button. A page reload does not update extension code — Chrome can serve a snapshot from load time — the card's Reload is what picks up the current folder.</li>" +
+          "<li><b>Icon not on the toolbar?</b> Click Chrome's puzzle-piece icon and pin “Mission Desk — Muse bridge”.</li>" +
+          "</ol>",
+        actions: [
+          { label: "Fixed — back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixNode: {
+    crumb: ["Fix", "Node errors"],
+    view: function(){
+      return {
+        kicker: "Fix · Node",
+        title: "Node errors during install",
+        body:
+          "<p>Red errors during <code>npm install</code> are most often an old or missing Node — " +
+          "Mission Desk needs <b>Node 20 or higher</b>. The install branch of this wizard has a " +
+          "check that tells you exactly where you stand, per system:</p>",
+        actions: [
+          { label: "Go to the Node check", to: "nodeCheck", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixRedAll: {
+    crumb: ["Fix", "Reset order"],
+    view: function(S){
+      var refresh = S.os === "win" ? "Ctrl+Shift+R" : S.os === "mac" ? "Cmd+Shift+R" : "Cmd+Shift+R (macOS) / Ctrl+Shift+R (Windows)";
+      return {
+        kicker: "Fix · Reset",
+        title: "Checks red, but everything looks open",
+        body:
+          "<p>Then it's usually <i>order</i>, not breakage. Restart the chain in dependency " +
+          "order, glancing at the lamp after each step — stop as soon as it goes ready:</p>" +
+          "<ol>" +
+          "<li><b>Bridge first.</b> Is Terminal 1 running the bridge? If not, <code>cd ai-bot-app/bridge</code> then <code>npm start</code>. Everything else depends on it.</li>" +
+          "<li><b>Hard-refresh the app page.</b> In the Mission Desk tab: <code>" + refresh + "</code>.</li>" +
+          "<li><b>Reload the extension.</b> <code>chrome://extensions</code> → the Mission Desk card → <b>Reload</b>.</li>" +
+          "<li><b>Reload the muse.ai tab</b> — last, so its content script re-registers into an already-healthy chain.</li>" +
+          "</ol>" +
+          "<p class='dim'>The order is the point: each piece registers with the one before it, " +
+          "so restarting downstream pieces into a dead bridge changes nothing.</p>",
+        actions: [
+          { label: "Fixed — back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  },
+
+  fixOther: {
+    crumb: ["Fix", "Something else"],
+    view: function(){
+      return {
+        kicker: "Fix · Something else",
+        title: "Not covered here? Capture this",
+        body:
+          "<p>Before digging further, note down two things — together they name almost every fault:</p>" +
+          "<ul>" +
+          "<li><b>Which check is red.</b> Click the lamp cluster in the app's top strip and read the failing check's name and its detail line in the connection popover. A failed check names what wasn't found — that name is the diagnosis.</li>" +
+          "<li><b>What the bridge terminal last printed.</b> Terminal 1's most recent lines — errors and rejected pairings are written there in plain words.</li>" +
+          "</ul>" +
+          "<h3>Where the docs live (in the repo)</h3>" +
+          "<ul>" +
+          "<li><code>README.md</code> — the short install and the 11 checks.</li>" +
+          "<li><code>extension/README.md</code> — the extension's own setup and troubleshooting, including the tab-presence notes.</li>" +
+          "<li><code>introduction.html</code> — the full manual, including its Troubleshooting tab.</li>" +
+          "<li><code>docs/FEATURE-MAP.md</code> — what the desk does and deliberately doesn't.</li>" +
+          "<li><code>DESIGN.md</code> — §9 is the fuse (bridge, pairing, security rules); §6.6 is the tab-presence protocol.</li>" +
+          "</ul>",
+        actions: [
+          { label: "Back to the start", to: "root", kind: "go" },
+          { label: "Another symptom", to: "fixHub", kind: "alt" }
+        ]
+      };
+    }
+  }
+  };
+
+  /* ================= state ================= */
+  var LS_KEY = "md-setup-wizard-v1";
+  var S = { node: "root", os: null, stack: [], ticks: {} };
+  try {
+    var saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    if (saved && typeof saved === "object") {
+      if (saved.ticks && typeof saved.ticks === "object") S.ticks = saved.ticks;
+      if (saved.os === "mac" || saved.os === "win") S.os = saved.os;
+    }
+  } catch (e) {}
+  function persist(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ ticks: S.ticks, os: S.os })); } catch (e) {}
+  }
+
+  var host = document.getElementById("nodeHost");
+  var crumbsEl = document.getElementById("crumbs");
+  var backBtn = document.getElementById("backBtn");
+  var scrollEl = document.getElementById("scroll");
+
+  function render(){
+    var def = NODES[S.node] || NODES.root;
+    var v = def.view(S);
+    document.body.setAttribute("data-node", S.node);
+    document.body.setAttribute("data-os", S.os || "");
+
+    // breadcrumb ({OS} dropped until an OS is chosen)
+    var parts = def.crumb.map(function(p){ return p === "{OS}" ? osName(S.os) : p; })
+                         .filter(function(p){ return p !== ""; });
+    crumbsEl.innerHTML = parts.map(function(p, i){
+      return (i ? '<span class="sep">›</span> ' : "") +
+             '<span class="' + (i === parts.length - 1 ? "here" : "") + '">' + esc(p) + "</span>";
+    }).join(" ");
+
+    var html = '<div class="panel"><p class="nkicker">' + esc(v.kicker) + "</p>" +
+               "<h2>" + esc(v.title) + "</h2>" + v.body + TICKS(v.ticks);
+    var choices = (v.actions || []).filter(function(a){ return a.kind === "choice"; });
+    var goes = (v.actions || []).filter(function(a){ return a.kind !== "choice"; });
+    if (choices.length) {
+      html += '<div class="choices">' + choices.map(function(a){
+        return '<button type="button" class="choice" data-to="' + a.to + '"' +
+               (a.os ? ' data-os="' + a.os + '"' : "") + ">" + esc(a.label) +
+               (a.sub ? "<small>" + esc(a.sub) + "</small>" : "") + "</button>";
+      }).join("") + "</div>";
+    }
+    if (goes.length) {
+      html += '<div class="actions">' + goes.map(function(a){
+        return '<button type="button" class="go' + (a.kind === "alt" ? " alt" : "") +
+               '" data-to="' + a.to + '"' + (a.os ? ' data-os="' + a.os + '"' : "") + ">" +
+               esc(a.label) + "</button>";
+      }).join("") + "</div>";
+    }
+    html += "</div>";
+    host.innerHTML = html;
+
+    // restore tick states for this node
+    host.querySelectorAll("[data-tick]").forEach(function(box){
+      box.checked = !!S.ticks[box.getAttribute("data-tick")];
+    });
+
+    backBtn.disabled = S.stack.length === 0;
+    scrollEl.scrollTop = 0;
+    requestAnimationFrame(vLayout);
+  }
+
+  function go(id, os){
+    if (!NODES[id]) return;
+    S.stack.push(S.node);
+    S.node = id;
+    if (os) { S.os = os; persist(); }
+    render();
+  }
+
+  host.addEventListener("click", function(e){
+    var nav = e.target.closest ? e.target.closest("[data-to]") : null;
+    if (nav) { go(nav.getAttribute("data-to"), nav.getAttribute("data-os")); return; }
+    var btn = e.target.closest ? e.target.closest("[data-copy]") : null;
+    if (!btn) return;
+    var pre = btn.parentElement.querySelector("pre");
+    var text = pre ? pre.textContent : "";
+    function done(){
+      btn.textContent = "copied"; btn.classList.add("ok");
+      setTimeout(function(){ btn.textContent = "copy"; btn.classList.remove("ok"); }, 1400);
+    }
+    function fallback(){
+      // Select-the-text fallback for file:// clipboard quirks.
+      try {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        if (document.execCommand("copy")) { done(); return; }
+      } catch (err) {}
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { if (document.execCommand("copy")) done(); } catch (err) {}
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  });
+
+  host.addEventListener("change", function(e){
+    var box = e.target.closest ? e.target.closest("[data-tick]") : null;
+    if (!box) return;
+    S.ticks[box.getAttribute("data-tick")] = box.checked;
+    persist();
+  });
+
+  backBtn.addEventListener("click", function(){
+    if (!S.stack.length) return;
+    S.node = S.stack.pop();
+    render();
+  });
+  document.getElementById("startOverBtn").addEventListener("click", function(){
+    S.node = "root"; S.stack = []; S.os = null; persist(); render();
+  });
+
+  /* ================= drawn scrollbar (as introduction.html) ================= */
+  var vbar = document.getElementById("vbar");
+  var vthumb = document.getElementById("vthumb");
+  var wrapEl = document.querySelector(".wrap");
+  function vMetrics(){
+    var range = scrollEl.scrollHeight - scrollEl.clientHeight;
+    return { range: range, over: range > 1 };
+  }
+  function vThumbTop(){
+    var m = vMetrics(); if (!m.over) return 0;
+    var trackH = vbar.clientHeight, thumbH = vthumb.offsetHeight;
+    return (scrollEl.scrollTop / m.range) * (trackH - thumbH);
+  }
+  function vLayout(){
+    var wr = wrapEl.getBoundingClientRect(), sr = scrollEl.getBoundingClientRect();
+    vbar.style.top = (sr.top - wr.top) + "px";
+    vbar.style.height = sr.height + "px";
+    var m = vMetrics();
+    if (!m.over) { vbar.classList.remove("show"); return; }
+    vbar.classList.add("show");
+    var thumbH = Math.max(28, scrollEl.clientHeight / scrollEl.scrollHeight * sr.height);
+    vthumb.style.height = thumbH + "px";
+    vthumb.style.transform = "translateY(" + vThumbTop() + "px)";
+  }
+  function vScrollSync(){
+    if (!vbar.classList.contains("show")) { vLayout(); return; }
+    vthumb.style.transform = "translateY(" + vThumbTop() + "px)";
+  }
+  scrollEl.addEventListener("scroll", vScrollSync, { passive: true });
+  new MutationObserver(function(){ requestAnimationFrame(vLayout); })
+    .observe(host, { childList: true, subtree: true });
+  new ResizeObserver(function(){ vLayout(); }).observe(scrollEl);
+  window.addEventListener("resize", vLayout);
+
+  (function(){
+    var drag = null;
+    vthumb.addEventListener("pointerdown", function(e){
+      drag = { y: e.clientY, top: scrollEl.scrollTop };
+      vbar.classList.add("dragging");
+      vthumb.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    vthumb.addEventListener("pointermove", function(e){
+      if (!drag) return;
+      var m = vMetrics(); if (!m.over) return;
+      var trackRange = vbar.clientHeight - vthumb.offsetHeight;
+      if (trackRange <= 0) return;
+      scrollEl.scrollTop = drag.top + (e.clientY - drag.y) / trackRange * m.range;
+    });
+    function endDrag(){ drag = null; vbar.classList.remove("dragging"); }
+    vthumb.addEventListener("pointerup", endDrag);
+    vthumb.addEventListener("pointercancel", endDrag);
+    vbar.addEventListener("pointerdown", function(e){
+      if (e.target === vthumb) return;
+      var m = vMetrics(); if (!m.over) return;
+      var r = vbar.getBoundingClientRect();
+      var ratio = (e.clientY - r.top - vthumb.offsetHeight / 2) / (r.height - vthumb.offsetHeight);
+      ratio = Math.max(0, Math.min(1, ratio));
+      scrollEl.scrollTop = ratio * m.range;
+    });
+    vbar.addEventListener("wheel", function(e){
+      var m = vMetrics(); if (!m.over) return;
+      e.preventDefault();
+      scrollEl.scrollTop += e.deltaY;
+    }, { passive: false });
+  })();
+
+  render();
+})();
+</script>
+</body>
+</html>
