@@ -4,7 +4,32 @@
    RAISED keys (gradient, light top edge, dark bottom edge, soft shadow);
    wells are SUNKEN (darker, inner shadow). States are read by appearance:
    hover brightens, pressed/ON goes inset, selected is raised + amber edge,
-   disabled is flattened and shadowless. */
+   disabled is flattened and shadowless.
+
+   SHAPE GRAMMAR (FEATURE-MAP R2 — every element announces its kind):
+   - PILLS are state, and state only: .chip (9px radius, colour-coded,
+     mono caps) — running / waiting / done / error / parked. Nothing
+     that is not a state may wear a pill.
+   - TAGS are data: .tag (squared 3px radius, neutral, no state colour)
+     — user-owned labels like conversation tags. Data never gets a
+     state colour or a pill shape.
+   - RAISED KEYS are controls: .btn / .raised (ctl gradient, key
+     shadow) — if it looks like a key, it must be pressable; if it is
+     pressable, it must look like one (disclosure carets, hover
+     brightening and pressed-inset complete the signal).
+   - FLAT / WELLS are readouts: panels and wells display; they never
+     invite a press. A readout must not wear the key recipe (see .gbar)
+     or a pill (see the popover's capability rows).
+
+   SIGNAL GRAMMAR (FEATURE-MAP R9 — one signal per meaning):
+   - WORKING = the pulse (.pulse, 1.2s opacity breath) — the only
+     animated "something is happening" signal: running chips and the
+     streaming bubble's dot. Nothing else animates to mean working.
+   - PHASE = the connection lamp's colour (no motion): the lamp says
+     which phase the adapter is in, never that work is running.
+   - PROGRESS = a static amber fill (.progress): width says how far;
+     it does not move to say "busy".
+   - STATE = chips (colour + label), per the shape grammar above. */
 
 :root {
   --bg: #191c20;
@@ -26,6 +51,11 @@
   --green: #7fc97f;
   --red: #e06c5c;
   --radius: 4px;
+  /* control height scale (R3) — small / standard / large; every
+     control snaps to one of these, nothing exceeds 50px */
+  --ctl-h-sm: 24px;
+  --ctl-h: 28px;
+  --ctl-h-lg: 32px;
 }
 
 * { box-sizing: border-box; }
@@ -78,10 +108,12 @@ input, select, textarea { font: inherit; color: var(--text); }
   border: 1px solid var(--edge);
   box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px rgba(0, 0, 0, 0.45);
   border-radius: var(--radius);
-  padding: 5px 12px;
+  padding: 4px 12px;
+  min-height: var(--ctl-h);
   cursor: pointer;
   white-space: nowrap;
 }
+.btn.small { min-height: var(--ctl-h-sm); padding: 2px 9px; font-size: 12px; }
 .btn:hover { filter: brightness(1.14); }
 .btn:active {
   background: linear-gradient(180deg, var(--ctl-lo), var(--ctl-hi));
@@ -129,7 +161,8 @@ input, select, textarea { font: inherit; color: var(--text); }
   background: transparent;
   border: 1px solid transparent;
   border-radius: 3px;
-  padding: 4px 14px;
+  padding: 3px 14px;
+  min-height: var(--ctl-h-sm);
   cursor: pointer;
   color: var(--muted);
 }
@@ -193,18 +226,24 @@ input, select, textarea { font: inherit; color: var(--text); }
 .chip-done { background: linear-gradient(180deg, var(--amber-hi), var(--amber-lo)); color: #241a02; font-weight: 700; }
 .chip-parked { background: linear-gradient(180deg, #2b2e35, #23262c); color: var(--faint); }
 .chip-error { background: linear-gradient(180deg, #7c352a, #612a21); color: #ffd9d2; }
+/* R9: the pulse is THE working signal — its animation lives on .pulse
+   itself so every working dot breathes (chips' dots and the streaming
+   bubble's dot alike; the bubble's dot previously rendered static
+   because the animation was scoped to .chip .pulse only). */
+.pulse { animation: pulse 1.2s ease-in-out infinite; }
 .chip .pulse {
   width: 6px; height: 6px; border-radius: 50%; background: currentColor;
-  animation: pulse 1.2s ease-in-out infinite;
 }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
 .tag {
+  /* data, not state (shape grammar): squared 3px radius, neutral —
+     visually distinct from the 9px state pills (.chip) */
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 1px 7px;
-  border-radius: 9px;
+  border-radius: 3px;
   background: linear-gradient(180deg, #333943, #2a2f37);
   border: 1px solid var(--edge);
   box-shadow: inset 0 1px 0 var(--edge-light);
@@ -213,7 +252,8 @@ input, select, textarea { font: inherit; color: var(--text); }
 }
 .tag button { background: none; border: none; cursor: pointer; color: var(--muted); padding: 0; line-height: 1; }
 
-/* progress — well track, amber fill with a moving sheen */
+/* progress — well track, STATIC amber fill (R9: width is the signal;
+   the animated sheen sweep is gone — motion means pulse, not fill) */
 .progress {
   height: 8px;
   border-radius: 4px;
@@ -229,17 +269,8 @@ input, select, textarea { font: inherit; color: var(--text); }
   position: relative;
   transition: width 0.6s ease;
 }
-.progress i::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
-  background-size: 200% 100%;
-  animation: sheen 1.8s linear infinite;
-}
-@keyframes sheen { from { background-position: 180% 0; } to { background-position: -80% 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .progress i::after, .chip .pulse { animation: none; }
+  .pulse, .slideover, .popover { animation: none; }
 }
 
 /* scrollbars — dark track, raised thumb */
@@ -278,10 +309,22 @@ input, select, textarea { font: inherit; color: var(--text); }
   gap: 8px;
   cursor: pointer;
   padding: 4px 10px;
+  min-height: var(--ctl-h-lg);
 }
 .lamp-cluster:hover { filter: brightness(1.13); }
 
-.search-well { flex: 0 1 340px; margin-left: auto; }
+/* disclosure caret (R1) — a CSS triangle in the muted tone; rotates to
+   point up while the popover it discloses is open */
+.caret {
+  width: 0; height: 0; flex: none;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--muted);
+  transition: transform 0.12s ease;
+}
+.caret.open { transform: rotate(180deg); }
+
+.search-well { flex: 0 1 340px; margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 10px; }
 .search-well input, .field {
   width: 100%;
   background: transparent;
@@ -290,6 +333,13 @@ input, select, textarea { font: inherit; color: var(--text); }
   padding: 6px 10px;
   color: var(--text);
 }
+.search-well input { flex: 1; min-width: 0; padding-left: 2px; padding-right: 2px; }
+.search-icon { color: var(--faint); display: inline-flex; flex: none; }
+.search-clear {
+  background: none; border: none; border-radius: 3px; flex: none;
+  color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px;
+}
+.search-clear:hover { color: var(--text); }
 .field-wrap { padding: 0; }
 .field-wrap input, .field-wrap select { width: 100%; background: transparent; border: none; outline: none; padding: 6px 8px; }
 .field-wrap select option { background: var(--panel-lo); color: var(--text); }
@@ -324,7 +374,30 @@ input, select, textarea { font: inherit; color: var(--text); }
 
 .viewbar { display: flex; align-items: center; gap: 12px; padding: 8px 14px 2px; flex: none; }
 
-.main { flex: 1; overflow-y: auto; padding: 8px 14px 26px; }
+.main { flex: 1; overflow-y: auto; padding: 8px 14px 26px; scrollbar-width: none; }
+.main::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* R8: the main region's bar is drawn (DrawnScrollbar.tsx) — an overlay
+   at the region's right edge, inside its box. Other regions keep the
+   styled native bars above. */
+.main-wrap { position: relative; flex: 1; display: flex; min-height: 0; }
+.drawn-bar {
+  position: absolute; top: 0; bottom: 0; right: 5px; width: 12px;
+  border-radius: 7px; z-index: 30; display: none;
+  background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+.drawn-thumb {
+  position: absolute; left: 1px; width: 10px; border-radius: 6px; cursor: grab;
+  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  border: 1px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.drawn-thumb:hover { background: linear-gradient(180deg, #515663, #383b43); }
+.drawn-bar.dragging .drawn-thumb, .drawn-thumb:active {
+  cursor: grabbing;
+  background: linear-gradient(180deg, var(--amber-hi), var(--amber));
+  border-color: var(--amber-lo);
+}
 
 .zone { margin-bottom: 16px; }
 .zone-title {
@@ -375,6 +448,7 @@ select.cell-select {
   box-shadow: inset 0 1px 0 var(--edge-light);
   border-radius: var(--radius);
   padding: 3px 6px;
+  min-height: var(--ctl-h-sm);
   max-width: 170px;
 }
 select.cell-select option { background: var(--panel-lo); }
@@ -388,10 +462,13 @@ select.cell-select option { background: var(--panel-lo); }
 .gantt-day { padding: 8px; min-height: 190px; }
 .gantt-day .dlabel { color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
 .gbar {
+  /* R1: a schedule bar is a readout, not a key — it wore the raised
+     control recipe (ctl gradient + key shadow) without being clickable.
+     Readouts take the panel recipe: flatter, softer shadow. */
   padding: 5px 8px; margin-bottom: 6px; font-size: 11.5px;
-  background: linear-gradient(180deg, var(--ctl-hi), var(--ctl-lo));
+  background: linear-gradient(180deg, var(--panel-hi), var(--panel-lo));
   border: 1px solid var(--edge); border-radius: var(--radius);
-  box-shadow: inset 0 1px 0 var(--edge-light), 0 1px 2px rgba(0,0,0,.4);
+  box-shadow: inset 0 1px 0 var(--edge-light);
 }
 .gbar .gtime { color: var(--muted); font-size: 10.5px; }
 .gbar.awaiting {
@@ -410,6 +487,17 @@ select.cell-select option { background: var(--panel-lo); }
 .prov b { color: var(--blue); font-weight: 500; }
 
 /* chat focus panel + artifact viewer (slide-overs) */
+/* R7: surfaces enter with one short ease — the slide-over slides in,
+   the popover fades/rises. Reduced motion disables both (see the
+   prefers-reduced-motion rule above). */
+@keyframes slide-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes pop-in {
+  from { transform: translateY(-4px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
 .slideover {
   /* Sits between the top strip and the status bar: the adapter lamp and
      the live counts stay visible (and clickable) while a chat is open —
@@ -420,6 +508,7 @@ select.cell-select option { background: var(--panel-lo); }
   border-left: 1px solid var(--edge);
   box-shadow: -14px 0 34px rgba(0, 0, 0, 0.55), inset 1px 0 0 var(--edge-light);
   z-index: 40; display: flex; flex-direction: column;
+  animation: slide-in 0.14s ease-out;
 }
 .slideover header {
   display: flex; align-items: center; gap: 10px;
@@ -449,9 +538,10 @@ select.cell-select option { background: var(--panel-lo); }
   position: absolute; top: 40px; right: 0; width: 380px; max-width: 92vw;
   z-index: 50; padding: 12px 14px; max-height: calc(100vh - 90px); overflow-y: auto;
   box-shadow: inset 0 1px 0 var(--edge-light), 0 14px 34px rgba(0, 0, 0, 0.6);
+  animation: pop-in 0.12s ease-out;
 }
 .check-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-.check-row .cstate { margin-left: auto; }
+.check-row .cstate { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .log-box { padding: 7px 9px; max-height: 150px; overflow-y: auto; font-size: 11px; line-height: 1.65; }
 .scenario-grid { display: flex; flex-wrap: wrap; gap: 5px; }
 

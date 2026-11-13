@@ -84,6 +84,34 @@ Desk-internal; unchanged from v0.1 except where noted.
   sheen and lamp-glow demote to supporting roles. Interrupted partials
   are D4's question, not a default.
 
+**R1–R9: BUILT 2026-11-12** in the R-batch tranche (branch
+`feat/r1-r9-refinements`, one labelled commit per item; proof:
+`scripts/probe-rbatch.mjs` 23/23 in mock mode, unit/render tests 97/97,
+full regression green — probe-slice2's defensive-Escape step was
+updated to assert the R4 contract it now triggers, 16/16).
+Interpretations taken while building:
+
+- **R1** also fixed one sibling the audit found outside the named list:
+  the Schedule view's `.gbar` bars are readouts that wore the raised-key
+  recipe; they now wear the panel recipe. The ConversationsTable title
+  button was deliberately left un-chromed (its signals are cursor +
+  tooltip; raising it would break the table's text grid).
+- **R4** is implemented as a tiny Escape stack (`src/app/escStack.ts`):
+  the last-opened surface is the one Escape closes, so popover >
+  viewer > chat resolves itself by mount order. Focus return is the
+  popover's (to the lamp-cluster, on every close path); the slide-overs
+  got Esc-close only. The title editor's Escape stops propagation so it
+  cancels the edit without closing a surface behind it.
+- **R5**'s map lives in one module (`src/app/labels.ts`) used by the
+  popover rows, the check states and the degraded strip. Check rows
+  keep "· required" as words ("Pass · required").
+- **R8** is bound to `.main` only, as specified; other regions keep
+  their styled native bars.
+- **R9** removed the sheen outright (not demoted): the fill is static.
+  One gap found and fixed on the way: the streaming bubble's dot never
+  actually pulsed — the animation was scoped to `.chip .pulse` only;
+  it now lives on `.pulse` itself.
+
 ## Owner decisions — DECIDED (owner, 2026-11-12, per recommendations)
 
 - **D1 (S4):** composer send behaviour. Evidence: the client materialises

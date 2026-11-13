@@ -6,6 +6,7 @@ import { ConversationsTable } from './components/ConversationsTable';
 import { ScheduleView } from './components/ScheduleView';
 import { ArtifactsView, ArtifactViewer } from './components/ArtifactsView';
 import { ChatPanel } from './components/ChatPanel';
+import { DrawnScrollbar } from './components/DrawnScrollbar';
 import { adapterStore, useAdapter } from './app/useAdapter';
 import { AmendBook } from './app/amends';
 import { loadCollection, records } from './app/records';
@@ -53,6 +54,7 @@ const BOT_ID = 'kavi';
 const DEFAULT_SYSTEM_LINE_CONV = 'conv-ai-bot-app';
 
 export default function App() {
+  const mainRef = useRef<HTMLElement>(null);
   const snap = useAdapter();
   const phase: AdapterPhase | null = snap.constructionError
     ? 'unconfigured'
@@ -590,7 +592,8 @@ export default function App() {
         )}
       </div>
 
-      <main className="main">
+      <div className="main-wrap">
+      <main className="main" ref={mainRef}>
         {view === 'board' && (
           <Board
             projects={projects}
@@ -658,6 +661,8 @@ export default function App() {
           />
         )}
       </main>
+      <DrawnScrollbar targetRef={mainRef} />
+      </div>
 
       <footer className="statusbar">
         <span data-testid="footer-counts">

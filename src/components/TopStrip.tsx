@@ -3,6 +3,8 @@ import { adapterStore, useAdapter } from '../app/useAdapter';
 import { phaseLamp, timeAgo } from '../app/live';
 import { MOCK_SCENARIOS, type MockScenario } from '../adapters/MockAdapter';
 import type { CheckState } from '../adapters/types';
+import { capabilityLabel, CHECK_STATE_WORDS } from '../app/labels';
+import { useEscClose } from '../app/escStack';
 
 const CHECK_SYMBOL: Record<CheckState, { sym: string; color: string }> = {
   pass: { sym: '✓', color: 'var(--green)' },
@@ -21,6 +23,16 @@ function ConnectionPopover({ onClose }: { onClose: () => void }) {
   const { status, constructionError, transitions, stale, now } = snap;
   const mock = adapterStore.getMock();
   const [busy, setBusy] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // R4 dialog behaviour: Escape closes (topmost surface only, via the
+  // esc stack), and focus enters the dialog on open — the close
+  // button is the landing target. Focus return to the lamp-cluster
+  // lives in TopStrip, which owns the open state.
+  useEscClose(onClose);
+  useEffect(() => {
+    closeRef.current?.focus();
+  }, []);
 
   const runScenario = async (s: MockScenario) => {
     if (!mock || busy) return;
@@ -54,7 +66,7 @@ function ConnectionPopover({ onClose }: { onClose: () => void }) {
           {constructionError ? 'unconfigured' : (status?.phase ?? '…')}
         </b>
         {stale && <span className="stale mono">stale</span>}
-        <button className="btn" style={{ marginLeft: 'auto', padding: '2px 9px' }} onClick={onClose} aria-label="Close connection panel">
+        <button ref={closeRef} className="btn" style={{ marginLeft: 'auto', padding: '2px 9px' }} onClick={onClose} aria-label="Close connection panel">
           ✕
         </button>
       </div>
@@ -90,12 +102,18 @@ function ConnectionPopover({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="mono" style={{ color: 'var(--muted)', margin: '14px 0 5px' }}>Capabilities</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+          {/* R2: capabilities are a readout, not controls — rows in
+              the check-row layout with friendly names (R5 labels),
+              never state pills: nothing here is pressable or a state. */}
+          <div>
             {status &&
               Object.entries(status.capabilities).map(([k, v]) => (
-                <span key={k} className={`chip ${v ? 'chip-running' : 'chip-error'}`}>
-                  {k} {v ? '✓' : '✗'}
-                </span>
+                <div className="check-row" key={k} data-testid="capability-row">
+                  <span style={{ color: v ? 'var(--green)' : 'var(--red)', width: 14, textAlign: 'center' }}>
+                    {v ? '✓' : '✗'}
+                  </span>
+                  <span>{capabilityLabel(k)}</span>
+                </div>
               ))}
           </div>
 
@@ -112,9 +130,9 @@ function ConnectionPopover({ onClose }: { onClose: () => void }) {
                   {c.label}
                   {c.detail ? <span className="small"> — {c.detail}</span> : null}
                 </span>
-                <span className="cstate mono" style={{ color: 'var(--muted)' }}>
-                  {c.state}
-                  {c.required ? ' · req' : ''}
+                <span className="cstate">
+                  {CHECK_STATE_WORDS[c.state]}
+                  {c.required ? ' · required' : ''}
                 </span>
               </div>
             ))}
@@ -145,8 +163,7 @@ function ConnectionPopover({ onClose }: { onClose: () => void }) {
                 {MOCK_SCENARIOS.map((s) => (
                   <button
                     key={s}
-                    className={`btn ${mock.getScenario() === s ? 'btn-primary' : ''}`}
-                    style={{ padding: '3px 9px', fontSize: 12 }}
+                    className={`btn small ${mock.getScenario() === s ? 'btn-primary' : ''}`}
                     onClick={() => void runScenario(s)}
                     disabled={busy}
                   >
@@ -173,6 +190,22 @@ export function TopStrip({
   const { status, constructionError, stale } = snap;
   const [popOpen, setPopOpen] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
+  const clusterRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // R6: ⌘K / Ctrl+K focuses the search well from anywhere in the app
+  // (the client's own search shortcut, S11).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
 
   useEffect(() => {
     if (!popOpen) return;
@@ -181,6 +214,20 @@ export function TopStrip({
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
+  }, [popOpen]);
+
+  // R4: when the popover closes (any path — Esc, outside click, the
+  // close button), focus returns to the lamp-cluster that opened it.
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (popOpen) {
+      wasOpenRef.current = true;
+      return;
+    }
+    if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      clusterRef.current?.focus();
+    }
   }, [popOpen]);
 
   const passed = status?.checks.filter((c) => c.state === 'pass').length ?? 0;
@@ -204,17 +251,39 @@ export function TopStrip({
       </div>
 
       <div className="search-well well">
+        <span className="search-icon" aria-hidden="true">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="4.4" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M10.4 10.4 L14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </span>
         <input
+          ref={searchRef}
           type="search"
           placeholder="Search conversations, tags, projects…"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
+          onKeyDown={(e) => {
+            // R6: Escape while focused clears the query — and is the
+            // input's alone (don't let it close a surface behind).
+            if (e.key === 'Escape') {
+              e.stopPropagation();
+              onQuery('');
+            }
+          }}
           aria-label="Search conversations"
+          data-testid="search-input"
         />
+        {query !== '' && (
+          <button className="search-clear" onClick={() => onQuery('')} aria-label="Clear search" data-testid="search-clear">
+            ×
+          </button>
+        )}
       </div>
 
       <div style={{ position: 'relative' }} ref={popRef}>
         <button
+          ref={clusterRef}
           className="lamp-cluster raised"
           onClick={() => setPopOpen((o) => !o)}
           aria-haspopup="dialog"
@@ -236,6 +305,10 @@ export function TopStrip({
           <span className="mono" style={{ color: 'var(--muted)' }}>
             {passed}/{total}
           </span>
+          {/* R1: the cluster is a status readout that is secretly a
+              button — the caret is its "opens" signal, flipped while
+              the popover is open (same state as aria-expanded). */}
+          <span className={`caret${popOpen ? ' open' : ''}`} aria-hidden="true" data-testid="adapter-caret" />
         </button>
         {popOpen && <ConnectionPopover onClose={() => setPopOpen(false)} />}
       </div>

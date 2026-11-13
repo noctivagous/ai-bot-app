@@ -82,8 +82,12 @@ try {
     { timeout: 15_000 },
   );
   report.check('send streams a labelled mock reply', true);
-  await page.keyboard.press('Escape').catch(() => {});
-  await page.locator('[data-testid="chat-panel"] button', { hasText: 'Close' }).click();
+  // R4 contract (FEATURE-MAP R-batch): Escape now closes the chat
+  // slide-over. Before R4 this press was a no-op and the probe clicked
+  // Close; the panel being gone after Escape IS the assertion now.
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('[data-testid="chat-panel"]'));
+  report.check('R4: Escape closes the chat slide-over', true);
 
   // 4b. job cards expand to the activity detail (ActivityPatch.detail)
   await page.click('[data-testid="job-expand-conv-nibglider"]');

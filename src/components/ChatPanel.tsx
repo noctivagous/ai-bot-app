@@ -3,6 +3,8 @@ import type { ChatMsg } from '../adapters/types';
 import type { ConversationRecord } from '../app/seed';
 import { useAdapter } from '../app/useAdapter';
 import { conversationChip, type LiveState } from '../app/live';
+import { useEscClose } from '../app/escStack';
+import { capabilityLabel } from '../app/labels';
 
 export function ChatPanel({
   conv,
@@ -27,6 +29,7 @@ export function ChatPanel({
 }) {
   const snap = useAdapter();
   const status = snap.status;
+  useEscClose(onClose);
   const phase = snap.constructionError ? 'error' : (status?.phase ?? 'unconfigured');
   const canSend = phase === 'ready' || phase === 'degraded';
   const chip = conversationChip(conv, live);
@@ -37,10 +40,11 @@ export function ChatPanel({
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, streamingText]);
 
+  // R5: lost capabilities are named for the user, never raw wire keys.
   const lostCaps = status
     ? Object.entries(status.capabilities)
         .filter(([, v]) => !v)
-        .map(([k]) => k)
+        .map(([k]) => capabilityLabel(k))
     : [];
 
   return (

@@ -188,7 +188,12 @@ export function ConversationsTable({
                           onBlur={() => saveTitle(c)}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') saveTitle(c);
-                            if (e.key === 'Escape') setEditingId(null);
+                            if (e.key === 'Escape') {
+                              // This Escape belongs to the editor only —
+                              // don't let it also close a surface behind.
+                              e.stopPropagation();
+                              setEditingId(null);
+                            }
                           }}
                           aria-label="Conversation title"
                           data-testid="title-edit"

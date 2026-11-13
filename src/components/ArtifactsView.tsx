@@ -1,4 +1,5 @@
 import type { ArtifactItem } from '../app/seed';
+import { useEscClose } from '../app/escStack';
 
 export function Provenance({ a }: { a: ArtifactItem }) {
   const p = a.provenance;
@@ -49,6 +50,7 @@ export function ArtifactsView({
 }
 
 export function ArtifactViewer({ artifact, onClose }: { artifact: ArtifactItem; onClose: () => void }) {
+  useEscClose(onClose);
   return (
     <div className="slideover" role="dialog" aria-label={`Artifact: ${artifact.name}`} style={{ width: 'min(42%, 560px)' }}>
       <header>
