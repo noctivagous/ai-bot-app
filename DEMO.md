@@ -40,6 +40,9 @@ single-page-app fallback, so the project's build settings are:
 - Build command: `npm run build:demo`
 - Deploy command: `npx wrangler deploy`
 
-For Cloudflare Pages instead, the build writes a `_redirects` SPA
-fallback into `dist-demo/`; use the same build command with output
-directory `dist-demo`.
+For Cloudflare Pages instead, use the same build command with output
+directory `dist-demo`, and add a one-line `_redirects` file
+(`/* /index.html 200`) to `dist-demo/` for the SPA fallback. That file
+must *not* be in the output for the Workers route: Workers static
+assets rejects it at publish time as an infinite loop (error 100324) —
+there the fallback is `wrangler.jsonc`'s `not_found_handling`.
