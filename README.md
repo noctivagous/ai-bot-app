@@ -15,6 +15,17 @@
 
 ---
 
+## Screenshots
+
+The board — projects across the top, what needs you, what's running, and what's next:
+
+![Mission Desk board](docs/screenshots/mission-desk.png)
+
+The public demo build (see [`DEMO.md`](DEMO.md)) — the same desk on the
+simulated adapter, banner and all:
+
+![Mission Desk demo mode](docs/screenshots/mission-desk-demo.png)
+
 ## Who it's for
 
 - **The multi-project builder** — several codebases on the go, each with its own chats and review queue, and every project's state (including what's built and waiting on your word to push) visible without opening five threads.
@@ -103,3 +114,7 @@ The status is *derived* from these checks and nothing else, so it can never clai
 - [`DESIGN.md`](DESIGN.md) — adapter contract (§5), status model (§6), the fuse (§9), every decision and its reasons
 - [`docs/muse-code-calibration-brief.md`](docs/muse-code-calibration-brief.md) — how the real-page calibration was assigned and audited
 - [`reference/`](reference/) — the original design seed this repo grew from
+
+## License
+
+MIT — see [`LICENSE`](LICENSE) for the full text.

@@ -6,3 +6,4 @@ dist
 # are local secrets/state — never committed.
 bridge/.pairing.json
 bridge/data/
+dist-demo

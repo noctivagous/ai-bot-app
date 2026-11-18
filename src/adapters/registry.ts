@@ -3,9 +3,11 @@
 // built against); `?adapter=muse` constructs the real MuseAiAdapter
 // against the local bridge — failures surface as that adapter's status
 // (error in the popover), never as a silent fallback to the mock.
+// Demo mode (DEMO.md) overrides the choice entirely: mock, always.
 
 import { MockAdapter, type MockScenario, MOCK_SCENARIOS } from './MockAdapter';
 import { MuseAiAdapter } from './MuseAiAdapter';
+import { isDemoMode } from '../app/demoMode';
 import type { BotServiceAdapter } from './types';
 
 export type RegistryResult =
@@ -14,7 +16,10 @@ export type RegistryResult =
 
 export function resolveAdapter(search: string): RegistryResult {
   const params = new URLSearchParams(search);
-  const which = params.get('adapter') ?? 'mock';
+  // Demo mode (DEMO.md) locks the desk to the simulated adapter: a
+  // deployed demo page must never honour ?adapter=muse, which would
+  // point it at a visitor's local bridge.
+  const which = isDemoMode(search) ? 'mock' : (params.get('adapter') ?? 'mock');
 
   if (which === 'mock') {
     const scenarioParam = params.get('mockScenario');

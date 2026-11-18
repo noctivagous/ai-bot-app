@@ -286,6 +286,20 @@ input, select, textarea { font: inherit; color: var(--text); }
 
 .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
+/* Demo mode banner (DEMO.md): a flat readout strip, not a control —
+   amber-tinted to mark it as a notice about the page itself. */
+.demo-banner {
+  flex: none;
+  padding: 7px 14px;
+  background: linear-gradient(180deg, #4a3a14, #3a2d0f);
+  color: #ffd98a;
+  border-bottom: 1px solid var(--amber-lo);
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-align: center;
+}
+.demo-banner a { color: var(--amber-hi); font-weight: 600; white-space: nowrap; }
+
 .topstrip {
   display: flex;
   align-items: center;

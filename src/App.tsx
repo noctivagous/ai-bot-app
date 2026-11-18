@@ -8,6 +8,7 @@ import { ArtifactsView, ArtifactViewer } from './components/ArtifactsView';
 import { ChatPanel } from './components/ChatPanel';
 import { DrawnScrollbar } from './components/DrawnScrollbar';
 import { adapterStore, useAdapter } from './app/useAdapter';
+import { isDemoMode } from './app/demoMode';
 import { AmendBook } from './app/amends';
 import { loadCollection, records } from './app/records';
 import {
@@ -555,6 +556,17 @@ export default function App() {
 
   return (
     <div className="app">
+      {typeof window !== 'undefined' && isDemoMode(window.location.search) && (
+        <div className="demo-banner" role="note">
+          Demo mode — a simulated Mission Desk running entirely in your browser.
+          The projects, chats and approvals are sample data from the built-in
+          mock adapter; nothing here touches a real Muse account or a local
+          bridge.{' '}
+          <a href="https://github.com/noctivagous/ai-bot-app" target="_blank" rel="noreferrer">
+            Run it for real →
+          </a>
+        </div>
+      )}
       <TopStrip
         query={query}
         onQuery={(q) => {
